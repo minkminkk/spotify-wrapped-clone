@@ -1,6 +1,6 @@
 import pytest
 from faker import Faker
-from src.utils.custom_providers import user_clickstream
+from src.utils.custom_providers import user_clickstream, spotify
 from datetime import datetime
 
 
@@ -8,6 +8,7 @@ from datetime import datetime
 def fake():
     fake = Faker()
     fake.add_provider(user_clickstream.Provider)
+    fake.add_provider(spotify.Provider)
     return fake
 
 @pytest.fixture
@@ -63,7 +64,8 @@ def test_events_from_users_between(fake, test_dates, max_events_per_user):
     assert len(res) == 0
     
     # Normal input
-    user_id_list = ["a" * 21 + str(i) for i in range(3)]
+    user_id_list = [fake.user_id() for _ in range(3)]
+        # generating valid user ids is done by Spotify provider
     args = *test_dates, user_id_list, max_events_per_user
     res = [_ for _ in fake.events_from_users_between(*args)]
 
