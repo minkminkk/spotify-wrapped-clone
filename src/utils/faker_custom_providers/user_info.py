@@ -1,3 +1,7 @@
+# 
+# Provider for generating fake user profile data
+# 
+
 from faker.providers import profile
 from . import spotify
 

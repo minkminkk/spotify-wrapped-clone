@@ -1,7 +1,12 @@
+# 
+# Provider for generating fake user clickstream data
+# 
+
+
 from typing import Generator, List
 import string
 from datetime import datetime, timedelta
-from random import randint, choice
+from random import randint, choice, choices
 
 from faker.providers import internet, date_time, user_agent
 from . import spotify
@@ -36,23 +41,35 @@ class ClickstreamProvider(*providers):
         except Exception:
             raise
 
-    def tracklist_for_user(self, min_tracks: int, max_tracks: int):
+    def tracklist_for_user(
+        self, 
+        min_tracks: int, 
+        max_tracks: int, 
+        sample_track_ids: List[str] | None = None
+    ) -> List[str]:
         """Generate random tracklist for user.
 
         :param min_tracks: minimum number of tracks in tracklist
         :type min_tracks: int
         :param max_tracks: maximum number of tracks in tracklist
         :type max_tracks: int
-        :return: _description_
-        :rtype: _type_
+        :param sample_track_ids: sample data that generated data will be based on
+        :type sample_track_ids: List[str] | None, optional
+        :return: list of track_id
+        :rtype: List[str]
         """
 
         if min_tracks > max_tracks:
             raise ValueError("min_tracks must be smaller or equal to max_tracks")
 
-        track_choices = []
-        for _ in range(randint(min_tracks, max_tracks)):
-            track_choices.append(super().track_id())
+        num_tracks = randint(min_tracks, max_tracks)
+        if sample_track_ids:    # if have sample data then take from sample
+            track_choices = choices(sample_track_ids, k = num_tracks)
+        else:   # else generate it
+            track_choices = []
+            for _ in range(num_tracks):
+                track_choices.append(super().track_id())
+        
         return track_choices
 
     def events_from_user_between(
@@ -78,28 +95,27 @@ class ClickstreamProvider(*providers):
         :yield: information about events
         :rtype: Generator[dict, None, None]
         """
+        # Check start_dt, end_dt
+        def _parse_dt_str(dt):
+            """Parse datetime string into datetime object if is string"""
+            if isinstance(dt, str):
+                try:
+                    dt = datetime.strptime(dt, "%Y-%m-%d %H:%M:%S")
+                except ValueError:
+                    raise ValueError("Invalid datetime format.")
+            return dt
+        start_dt, end_dt = map(_parse_dt_str, (start_dt, end_dt))
 
-        if isinstance(start_dt, str):
-            try:
-                start_dt = datetime.strptime(start_dt, "%Y-%m-%d %H:%M:%S")
-            except ValueError:
-                raise ValueError("Invalid datetime format.")
-        if isinstance(end_dt, str):
-            try:
-                end_dt = datetime.strptime(end_dt, "%Y-%m-%d %H:%M:%S")
-            except ValueError:
-                raise ValueError("Invalid datetime format.")
         if start_dt > end_dt:
             raise ValueError("start_dt must be <= end_dt.")
 
         # Initial parameters
-        ipv4 = super().ipv4()
+        ipv4 = super().ipv4()   # per-user param
         event_name = "play"
         max_events -= 1 if max_events % 2 != 0 else 0   
             # update max_events to be even so that event_name ends after "stop" 
 
-        # Generate tracks for a particular user_id because 
-        # we do not want track_id to be completely random
+        # Per-user param because we do not want track_id to be completely random
         # Implement in list comprehension would throw error
         tracklist = self.tracklist_for_user(min_tracks = 5, max_tracks = 30)
         track_id = choice(tracklist)

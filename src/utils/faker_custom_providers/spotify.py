@@ -1,3 +1,8 @@
+# 
+# Provider for Spotify API entities like user_id, track_id...
+# (https://developer.spotify.com/documentation/web-api/concepts/spotify-uris-ids)
+# 
+
 from faker.providers import BaseProvider
 
 
