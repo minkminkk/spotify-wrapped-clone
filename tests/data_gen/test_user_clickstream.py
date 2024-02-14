@@ -7,6 +7,7 @@ from datetime import datetime
 @pytest.fixture
 def fake():
     fake = Faker()
+    Faker.seed(0)
     fake.add_provider(user_clickstream.Provider)
     fake.add_provider(spotify.Provider)
     return fake
