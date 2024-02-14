@@ -71,8 +71,7 @@ class ClickstreamProvider(*providers):
         :param max_events: maximum number of events generated in case the
             time period is too large, defaults to 100
         :type max_events: int, optional
-        :raises ValueError: when cannot parse start_dt 
-            or end_dt datetime strings
+        :raises ValueError: when cannot parse start_dt or end_dt datetime strings
         :yield: information about events
         :rtype: Generator[dict, None, None]
         """

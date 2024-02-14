@@ -9,7 +9,8 @@ def main():
     fake.add_provider(user_info.Provider)
     fake.add_provider(user_clickstream.Provider)
 
-    users = [fake.user_profile() for _ in range(50)]
+    users_cnt = 2
+    users = [fake.user_profile() for _ in range(users_cnt)]
     for u in users:
         print(u)
 
