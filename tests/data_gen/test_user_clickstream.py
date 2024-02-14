@@ -12,14 +12,11 @@ def fake():
 
 @pytest.fixture
 def test_dates():   # start_dt, end_dt
-    return datetime(2018, 1, 1, 1, 0, 0), datetime(2018, 1, 1, 5, 0, 0)
+    return datetime(2018, 1, 1, 1), datetime(2018, 1, 1, 5)
 
 @pytest.fixture
-def metadata():   # default metadata
-    return {
-        "max_events_per_user": 4,
-        "user_id_list": ["_1", "_2", "_3"]
-    }
+def max_events_per_user():
+    return 4
 
 
 def test_tracklist_for_user(fake):
@@ -31,8 +28,7 @@ def test_tracklist_for_user(fake):
     assert 1 <= len(fake.tracklist_for_user(1, 3)) <= 3
 
 
-def test_events_from_user_between(fake, test_dates):
-    max_events_per_user = 4
+def test_events_from_user_between(fake, test_dates, max_events_per_user):
     start_dt, end_dt = test_dates
     args = *test_dates, "_", max_events_per_user
     res = [_ for _ in fake.events_from_user_between(*args)]
@@ -61,14 +57,15 @@ def test_events_from_user_between(fake, test_dates):
         cur_event_name = "stop" if cur_event_name == "play" else "play"
 
 
-def test_events_from_users_between(fake, test_dates):
+def test_events_from_users_between(fake, test_dates, max_events_per_user):
     # Check when user_id_list is empty
     res = [_ for _ in fake.events_from_users_between(*test_dates, [])]
     assert len(res) == 0
     
     # Normal input
     user_id_list = ["_1", "_2", "_3"]
-    res = [_ for _ in fake.events_from_users_between(*test_dates, user_id_list)]
+    args = *test_dates, user_id_list, max_events_per_user
+    res = [_ for _ in fake.events_from_users_between(*args)]
 
     # Check user count
     users_set = set(map(lambda x: x["user_id"], res))
