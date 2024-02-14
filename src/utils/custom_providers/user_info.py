@@ -1,6 +1,7 @@
-from faker.providers import python, profile, misc
+from faker.providers import profile
+from . import spotify
 
-providers = (python.Provider, profile.Provider, misc.Provider)
+providers = (profile.Provider, spotify.Provider)
 
 
 class UserInfoProvider(*providers):
@@ -11,8 +12,7 @@ class UserInfoProvider(*providers):
         :rtype: dict
         """
 
-        return {"user_id": super().hexify("^" * 22)} \
-            | super().simple_profile()
+        return {"user_id": super().user_id()} | super().simple_profile()
         
 
 Provider = UserInfoProvider
