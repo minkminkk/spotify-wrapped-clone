@@ -63,10 +63,10 @@ def test_events_from_users_between(fake, test_dates, max_events_per_user):
     assert len(res) == 0
     
     # Normal input
-    user_id_list = ["_1", "_2", "_3"]
+    user_id_list = ["a" * 21 + str(i) for i in range(3)]
     args = *test_dates, user_id_list, max_events_per_user
     res = [_ for _ in fake.events_from_users_between(*args)]
 
-    # Check user count
+    # Check user ids still hold from input to output
     users_set = set(map(lambda x: x["user_id"], res))
-    assert len(users_set) == len(user_id_list)
+    assert users_set == set(user_id_list)

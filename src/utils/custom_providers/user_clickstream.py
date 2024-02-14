@@ -1,4 +1,5 @@
 from typing import Generator, List
+import string
 from datetime import datetime, timedelta
 from random import randint, choice
 
@@ -16,7 +17,8 @@ providers = (
 class ClickstreamProvider(*providers):
     def _single_event(self, **kwargs):
         try:
-            if len(kwargs["user_id"]) != 22:
+            if len(kwargs["user_id"]) != 22 \
+                and all([c in string.hexdigits for c in kwargs["user_id"]]):
                 raise ValueError("user_id must consist of 22 hexadecimal characters")
             if kwargs["event_name"] not in ("play", "stop"):
                 raise ValueError("event_name must be 'play' or 'stop'")
@@ -92,7 +94,6 @@ class ClickstreamProvider(*providers):
 
         # Initial parameters
         ipv4 = super().ipv4()
-        user_id = super().user_id()
         event_name = "play"
         max_events -= 1 if max_events % 2 != 0 else 0   
             # update max_events to be even so that event_name ends after "stop" 
