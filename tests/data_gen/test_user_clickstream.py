@@ -31,7 +31,7 @@ def test_tracklist_for_user(fake):
     assert 1 <= len(fake.tracklist_for_user(1, 3)) <= 3
 
 
-def test_events_from_user_between(fake, test_dates, metadata):
+def test_events_from_user_between(fake, test_dates):
     max_events_per_user = 4
     start_dt, end_dt = test_dates
     args = *test_dates, "_", max_events_per_user
@@ -49,8 +49,8 @@ def test_events_from_user_between(fake, test_dates, metadata):
                 break
 
     # Check if generate over max_events
-    assert len(res) <= metadata["max_events_per_user"]
-    
+    assert len(res) <= max_events_per_user
+
     # Check result fields
     cur_event_name = "play"
     for event in res:
@@ -61,19 +61,15 @@ def test_events_from_user_between(fake, test_dates, metadata):
         cur_event_name = "stop" if cur_event_name == "play" else "play"
 
 
-def test_events_from_users_between(fake, test_dates, metadata):
+def test_events_from_users_between(fake, test_dates):
     # Check when user_id_list is empty
     res = [_ for _ in fake.events_from_users_between(*test_dates, [])]
     assert len(res) == 0
     
     # Normal input
-    res = [
-        _ for _ in fake.events_from_users_between(
-            *test_dates, 
-            metadata["user_id_list"]
-        )
-    ]
+    user_id_list = ["_1", "_2", "_3"]
+    res = [_ for _ in fake.events_from_users_between(*test_dates, user_id_list)]
 
     # Check user count
     users_set = set(map(lambda x: x["user_id"], res))
-    assert len(users_set) == len(metadata["user_id_list"])
+    assert len(users_set) == len(user_id_list)
