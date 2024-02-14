@@ -61,6 +61,7 @@ class ClickstreamProvider(*providers):
         max_events: int = 1000
     ) -> Generator[dict, None, None]:
         """Generate events for a particular user between 2 timestamps.
+        Used as generators instead of functions like in other providers.
 
         :param start_dt: start datetime
         :type start_dt: datetime | str
@@ -146,7 +147,8 @@ class ClickstreamProvider(*providers):
         user_id_list: List[str],
         max_events_per_user: int = 1000
     ) -> Generator[dict, None, None]:
-        """Generate events for multiple users between 2 timestamps.
+        """Generate events for multiple users between 2 timestamps. 
+        Used as generators instead of functions like in other providers.
 
         :param start_dt: start datetime
         :type start_dt: datetime

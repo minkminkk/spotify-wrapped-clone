@@ -6,7 +6,7 @@ providers = (profile.Provider, spotify.Provider)
 
 class UserInfoProvider(*providers):
     def user_profile(self) -> dict:
-        """Get user profile information.
+        """Generate user profile information.
 
         :return: User profile information.
         :rtype: dict
