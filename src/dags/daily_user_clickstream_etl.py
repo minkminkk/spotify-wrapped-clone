@@ -5,3 +5,16 @@
 # (https://huggingface.co/datasets/maharshipandya/spotify-tracks-dataset)
 #       - Download dataset and use Airflow to save track_id column as another file
 #       - When generating data, read data from that file
+
+from airflow.models.dag import DAG
+from airflow.decorators import dag, task
+
+
+default_args = {
+    "depends_on_past": False,
+    "email": ["airflow@example.com"],
+    "email_on_failure": False,
+    "email_on_retry": False,
+    "retries": 0
+}
+
