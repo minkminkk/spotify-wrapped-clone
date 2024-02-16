@@ -5,7 +5,7 @@ from queue import Queue
 from collections import defaultdict
 
 import requests
-from .checks import check_response_json, check_status_code
+from utils.spotify_api_client.checks import check_response_json, check_status_code
 
 ACCOUNTS_ROOT_URL = "https://accounts.spotify.com/api/token"
 API_ROOT_URL = "https://api.spotify.com/v1"

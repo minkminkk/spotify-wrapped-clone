@@ -1,5 +1,5 @@
 import pytest
-from src.utils.spotify_api_client.session import *
+from utils.spotify_api_client.session import *
 import os
 
 

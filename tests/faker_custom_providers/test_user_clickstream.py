@@ -1,6 +1,6 @@
 import pytest
 from faker import Faker
-from src.utils.faker_custom_providers import user_clickstream, spotify
+from utils.faker_custom_providers import user_clickstream, spotify
 from datetime import datetime
 
 
