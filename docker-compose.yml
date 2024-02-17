@@ -1,0 +1,13 @@
+services:
+  airflow:
+    image: apache/airflow:slim-2.8.1-python3.11
+    container_name: airflow
+    # Environment variables based on Airflow doc
+    # (https://airflow.apache.org/docs/apache-airflow/stable/configurations-ref.html#)
+    env_file: ./containers/airflow/airflow.env
+    command: ["airflow", "standalone"]
+    volumes:
+      - ./src/dags:/opt/airflow/dags
+      - ./logs/airflow:/opt/airflow/logs
+    ports:
+      - "8080:8080"

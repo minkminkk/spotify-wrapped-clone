@@ -1,5 +1,5 @@
 import pytest
-from utils.spotify_api_client.session import *
+from airflow.models.variable import Variable
 import os
 
 
@@ -42,8 +42,8 @@ def test_context_manager(client_id, client_secret):
     # Test __enter__
     with SpotifyAPISession(client_id, client_secret) as s:
         assert hasattr(s, "client_token")
-        assert hasattr(s, "_http_session")
+        assert hasattr(s, "http_session")
 
     # Test __exit__
     assert not hasattr(s, "client_token")
-    assert not hasattr(s, "_http_session")
+    assert not hasattr(s, "http_session")

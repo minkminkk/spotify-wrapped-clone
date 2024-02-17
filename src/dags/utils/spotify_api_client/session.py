@@ -12,11 +12,14 @@ API_ROOT_URL = "https://api.spotify.com/v1"
 
 
 class SpotifyAPISession:
-    def __init__(
-        self, 
-        client_id: str | None = None,
-        client_secret: str | None = None
-    ):
+    """Abstraction for Spotify WebAPI interaction. Includes client token
+    retrieval using client credentials upon instantiation.
+    
+    Should use with `with` block to close HTTP session automatically upon
+    exiting. Avoid leaving the session hanging when unhandled exceptions occur.
+    """
+
+    def __init__(self, client_id: str = None, client_secret: str = None):
         # Validate inputs
         if client_id:
             self.__client_id = client_id
@@ -31,18 +34,15 @@ class SpotifyAPISession:
             self.__client_secret = os.getenv("SPOTIFY_CLIENT_SECRET")
             if not self.__client_secret:
                 raise EnvironmentError("SPOTIFY_CLIENT_SECRET not found.")
-    
 
-    def __enter__(self):
-        # Create new HTTP session only when used with context managers
-        # as recommended in requests documentation
-        self._http_session = requests.Session()
+        # Create new HTTP session when initialized
+        self.http_session = requests.Session()
 
         # Get client token via client credentials
         self.client_token = self._get_credentials()
 
-        # Update authorization header
-        self._http_session.headers.update(
+        # Update authorization header for each request onwards
+        self.http_session.headers.update(
             {
                 "Authorization": \
                     self.client_token["token_type"] \
@@ -51,14 +51,20 @@ class SpotifyAPISession:
             }
         )
 
+
+    def close(self):
+        # Close and delete HTTP session. Delete client token 
+        self.http_session.close()
+        del self.http_session
+        del self.client_token
+
+
+    def __enter__(self):
         return self
 
 
     def __exit__(self, *args):
-        # Close and delete HTTP session. Delete client token 
-        self._http_session.close()
-        del self._http_session
-        del self.client_token
+        self.close()
 
 
     def _get_credentials(self) -> dict:
@@ -73,7 +79,7 @@ class SpotifyAPISession:
         auth_b64 = base64.b64encode(auth_bytes)
         auth_msg = auth_b64.decode("utf-8")
 
-        response = self._http_session.post(
+        response = self.http_session.post(
             url = ACCOUNTS_ROOT_URL, 
             data = {"grant_type": "client_credentials"},
             headers = {
@@ -89,8 +95,7 @@ class SpotifyAPISession:
 
 
     def get_genres(self) -> dict:
-        """Get all available genres in Spotify API. 
-        Only usable within `with` block.
+        """Get all available genres in Spotify API.
 
         :raises Exception: cannot parse JSON or unexpected JSON schema
         :return: response of all available genres
@@ -98,7 +103,7 @@ class SpotifyAPISession:
         """
 
         url = API_ROOT_URL + "/recommendations/available-genre-seeds"
-        response = self._http_session.get(url)
+        response = self.http_session.get(url)
 
         check_response_json(response)
         check_status_code(response)
@@ -117,7 +122,6 @@ class SpotifyAPISession:
         recursive: bool = False
     ) -> dict:
         """Query items (albums, tracks, artists, playlists...).
-        Only usable within `with` block.
 
         :param q: query string, defined [here](https://developer.spotify.com/documentation/web-api/reference/search)
         :type q: str
@@ -151,7 +155,7 @@ class SpotifyAPISession:
 
         # 2 different implementations based on `recursive` arg
         if not recursive:
-            response = self._http_session.get(url, params = params)
+            response = self.http_session.get(url, params = params)
 
             check_response_json(response)
             check_status_code(response)
@@ -171,7 +175,7 @@ class SpotifyAPISession:
 
             while not q_urls.empty():
                 url = q_urls.get_nowait()
-                response = self._http_session.get(url)
+                response = self.http_session.get(url)
 
                 check_response_json(response)
                 check_status_code(response)
@@ -189,14 +193,13 @@ class SpotifyAPISession:
 
     def get_tracks(
         self,
-        track_ids: List[str],
+        track_id: str | List[str],
         market: str | None = None
     ) -> dict:
         """Query information about tracks.
-        Only usable within `with` block.
 
-        :param track_ids: list of `track_id`
-        :type track_ids: List[str]
+        :param track_ids: `track_id` or list of `track_id`
+        :type track_ids: str | List[str]
         :param market: country code of market, defaults to None
         :type market: str | None, optional
         :return: response containing query results
@@ -205,18 +208,16 @@ class SpotifyAPISession:
 
         url = API_ROOT_URL + "/tracks"
         params = {
-            "ids": ",".join(track_ids),
+            "ids": ",".join(track_id) \
+                if isinstance(track_id, List) else track_id,
             market: market
         }
-        response = self._http_session.get(url, params = params)
+        response = self.http_session.get(url, params = params)
 
         check_response_json(response)
         check_status_code(response)
 
         return response.json()
-
-
-# with SpotifyAPISession() as s:
-#     res = s.search_items("aaaaaaaaaaa", "track", limit = 50, offset = 0, recursive=True)
-#     for key, value in res.items():
-#         print(key, len(value))
+    
+    # The remaining endpoints are not implemented 
+    # due to not needed in this project
