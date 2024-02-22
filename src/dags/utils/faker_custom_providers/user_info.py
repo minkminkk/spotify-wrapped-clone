@@ -20,7 +20,7 @@ class UserInfoProvider(*providers):
         user_id = super().user_id()
         profile = super().simple_profile()
         profile["birthdate"] = profile["birthdate"].strftime("%Y-%m-%d") 
-        return {"user_id": user_id} | profile
+        return {"_id": user_id} | profile
         
 
 Provider = UserInfoProvider
