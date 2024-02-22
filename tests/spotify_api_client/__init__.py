@@ -1,4 +1,15 @@
+import pytest
 import os
+
+
+@pytest.fixture(scope = "session")
+def client_id():
+    return os.getenv("SPOTIFY_CLIENT_ID")
+
+
+@pytest.fixture(scope = "session")
+def client_secret():
+    return os.getenv("SPOTIFY_CLIENT_SECRET")
 
 
 def test_env():

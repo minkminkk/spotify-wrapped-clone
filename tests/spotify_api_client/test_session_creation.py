@@ -1,5 +1,5 @@
 import pytest
-from airflow.models.variable import Variable
+from utils.spotify_api_client.session import *
 import os
 
 

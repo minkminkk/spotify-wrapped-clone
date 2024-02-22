@@ -19,8 +19,8 @@ stop:
 	docker compose stop
 
 
-airflow_container=airflow
+airflow_container=spotify-wrapped-clone-airflow-1
 airflow_shell:
 	docker exec -it ${airflow_container} /bin/bash
 test_dag:
-	docker exec -it ${airflow_container} airflow dags test daily_user_clickstream_etl
+	docker exec -it ${airflow_container} airflow dags test scrape_spotify_api
