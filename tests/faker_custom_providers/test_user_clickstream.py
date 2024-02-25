@@ -4,7 +4,7 @@ from utils.faker_custom_providers import user_clickstream, spotify
 from datetime import datetime
 
 
-@pytest.fixture
+@pytest.fixture(scope = "module")
 def fake():
     fake = Faker()
     Faker.seed(0)
