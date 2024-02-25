@@ -11,10 +11,11 @@ def authenticator() -> auth.ClientAuthenticator:
 
     
 @pytest.fixture(scope = "module")
-def token(authenticator) -> dict:
-    authenticator.set_strategy(ClientCredentialsStrategy())
-    return authenticator.get_client_token()
+def access_token(authenticator) -> dict:
+    authenticator.set_strategy(auth.ClientCredentialsStrategy())
+    return authenticator.get_access_token()
 
 
-def test_get_token_client_creds(token: dict):
-    assert token.keys() == ["access_token", "token_type", "expires_in"]
+def test_access_token_fields(access_token: dict):
+    assert set(access_token.keys()) \
+        == set(["access_token", "token_type", "expires_in"])

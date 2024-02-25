@@ -1,25 +1,21 @@
 import pytest
-import os
+from utils.spotify_api_client import auth, session
 
 
-@pytest.fixture(scope = "session")
-def client_id():
-    return os.getenv("SPOTIFY_CLIENT_ID")
+@pytest.fixture(scope = "module")
+def authenticator() -> auth.ClientAuthenticator:
+    return auth.ClientAuthenticator(
+        "67420aa232044ea28373a5ac0f03f4c0",
+        "ad75e799c0cd4d629782fc626feec7fa"
+    )
 
-
-@pytest.fixture(scope = "session")
-def client_secret():
-    return os.getenv("SPOTIFY_CLIENT_SECRET")
-
-
-def test_env():
-    client_id = os.getenv("SPOTIFY_CLIENT_ID")
-    client_secret = os.getenv("SPOTIFY_CLIENT_SECRET")
-
-    if not client_id or not client_secret:
-        error_msg = "Correct SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET " \
-            + "must be set to perform complete tests"
-        raise EnvironmentError(error_msg)
     
-    
-test_env()
+@pytest.fixture(scope = "module")
+def access_token(authenticator) -> dict:
+    authenticator.set_strategy(auth.ClientCredentialsStrategy())
+    return authenticator.get_access_token()
+
+
+@pytest.fixture(scope = "module")
+def spotify_session(access_token: dict):
+    return session.APISession(access_token)

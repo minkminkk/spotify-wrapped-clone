@@ -20,6 +20,12 @@ class APISession:
     """
 
     def __init__(self, access_token: dict):
+        if not isinstance(access_token, dict):
+            error_msg = "access_token type expected to be dict, " \
+                + f"got {type(access_token).__name__} instead"
+            raise ValueError(error_msg)
+
+        # Root URL
         self.root_url = "https://api.spotify.com/v1"
 
         # Create new HTTP session when initialized
