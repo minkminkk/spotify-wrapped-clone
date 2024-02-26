@@ -18,6 +18,7 @@ def access_token(authenticator) -> dict:
 def spotify_session(access_token: dict):
     return session.APISession(access_token)
 
+
 def test_valid_init(spotify_session: session.APISession):
     # Test successful creation
     assert hasattr(spotify_session, "root_url")

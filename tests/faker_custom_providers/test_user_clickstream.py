@@ -1,6 +1,6 @@
 import pytest
 from faker import Faker
-from utils.faker_custom_providers import user_clickstream, spotify
+from utils.faker_custom_providers import spotify, user_info, user_clickstream
 from datetime import datetime
 
 
@@ -8,8 +8,9 @@ from datetime import datetime
 def fake():
     fake = Faker()
     Faker.seed(0)
-    fake.add_provider(user_clickstream.Provider)
     fake.add_provider(spotify.Provider)
+    fake.add_provider(user_info.Provider)
+    fake.add_provider(user_clickstream.Provider)
     return fake
 
 @pytest.fixture
@@ -25,9 +26,11 @@ def test_tracklist_for_user(fake):
     with pytest.raises(ValueError):
         fake.tracklist_for_user(3, 2)
 
-    assert len(fake.tracklist_for_user(0, 0)) == 0
-    assert len(fake.tracklist_for_user(2, 2)) == 2
-    assert 1 <= len(fake.tracklist_for_user(1, 3)) <= 3
+    assert len(fake.tracklist_for_user(min_tracks = 0,  max_tracks = 0)) == 0
+    assert len(fake.tracklist_for_user(min_tracks = 2, max_tracks = 2)) == 2
+    assert 1 <= len(
+        fake.tracklist_for_user(min_tracks = 1, max_tracks = 3)
+    ) <= 3
 
 
 def test_events_from_user_between(fake, test_dates, max_events_per_user):
