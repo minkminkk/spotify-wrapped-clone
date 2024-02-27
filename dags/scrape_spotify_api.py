@@ -72,7 +72,6 @@ def scrape_spotify_api():
 
         @task
         def search_tracks(access_token: dict[str, Any], genre: List[str]):
-
             with APISession(access_token) as session:
                 fields = ("id", "name", "duration_ms", "artists", "album")
 
@@ -315,6 +314,7 @@ run = scrape_spotify_api()
 
 if __name__ == "__main__":
     # To test DAG locally; python dag_file.py
+    from pendulum import datetime
     from include.dag_test_config import local_test_configs
     
     run.test(**local_test_configs)
