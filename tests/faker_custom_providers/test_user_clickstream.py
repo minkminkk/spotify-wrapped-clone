@@ -2,6 +2,7 @@ import pytest
 from faker import Faker
 from include.faker_custom_providers import spotify, user_info, user_clickstream
 from datetime import datetime
+import string
 
 
 @pytest.fixture(scope = "module")
@@ -55,9 +56,12 @@ def test_events_from_user_between(fake, test_dates, max_events_per_user):
     # Check result fields
     cur_event_name = "play"
     for event in res:
-        assert event["event_name"] == cur_event_name
+        assert all([c in string.hexdigits for c in event["event_id"]]) \
+            and len(event["event_id"]) == 64    # sha256 field
         assert start_dt <= event["event_ts"] <= end_dt
-        assert len(event["track_id"]) == 22
+        assert event["event_name"] == cur_event_name
+        assert all([c in string.hexdigits for c in event["track_id"]]) \
+            and len(event["track_id"]) == 22    # 22 hexdigits
 
         cur_event_name = "stop" if cur_event_name == "play" else "play"
 

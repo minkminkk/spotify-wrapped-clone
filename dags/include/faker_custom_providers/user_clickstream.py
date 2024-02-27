@@ -8,13 +8,14 @@ import string
 from datetime import datetime, timedelta
 from random import randint, choice, choices
 
-from faker.providers import internet, date_time, user_agent
+from faker.providers import internet, date_time, user_agent, misc
 from . import spotify
 
 providers = (
     internet.Provider, 
     date_time.Provider, 
     user_agent.Provider,
+    misc.Provider,
     spotify.Provider
 )
 
@@ -29,11 +30,12 @@ class ClickstreamProvider(*providers):
                 raise ValueError("event_name must be 'play' or 'stop'")
             
             return {
+                "event_id": kwargs["event_id"],
+                "event_ts": kwargs["event_ts"],
+                "event_name": kwargs["event_name"],
                 "ipv4": kwargs["ipv4"],
                 "user_id": kwargs["user_id"],   # 62-char alphanum string
                 "user_agent": kwargs["user_agent"],
-                "event_ts": kwargs["event_ts"],
-                "event_name": kwargs["event_name"],
                 "track_id": kwargs["track_id"] 
             }
         except KeyError:
@@ -137,11 +139,12 @@ class ClickstreamProvider(*providers):
             )
 
             yield self._single_event(
+                event_id = super().sha256(),
+                event_ts = event_ts,
+                event_name = event_name,
                 ipv4 = ipv4,
                 user_id = user_id,
                 user_agent = super().user_agent(),
-                event_ts = event_ts,
-                event_name = event_name,
                 track_id = track_id
             )
 

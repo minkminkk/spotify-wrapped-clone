@@ -1,15 +1,15 @@
 import pytest
-from os.path import dirname, abspath, join
+from os.path import join, dirname, abspath
 
 from airflow.models import DagBag
 
 
-@pytest.fixture()
+@pytest.fixture
 def dagbag():
-    path = join(dirname(dirname(dirname(abspath(__file__)))), "src", "dags")
+    path = join(dirname(dirname(dirname(abspath(__file__)))), "dags")
     return DagBag(dag_folder = path, include_examples = False)
 
-@pytest.fixture()
+@pytest.fixture
 def dag(dagbag):
     return dagbag.get_dag(dag_id = "daily_user_clickstream_etl")
 
