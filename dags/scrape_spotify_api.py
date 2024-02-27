@@ -3,7 +3,6 @@ import pendulum
 import logging
 
 from airflow.decorators import dag, task, teardown, task_group
-from airflow.models.dag import DAG
 from airflow.models.variable import Variable
 from airflow.models.taskinstance import TaskInstance
 from airflow.models import XCom
@@ -317,5 +316,7 @@ run = scrape_spotify_api()
 
 
 if __name__ == "__main__":
-    run.test()
-
+    # To test DAG locally; python dag_file.py
+    from include.dag_test_config import local_test_configs
+    
+    run.test(**local_test_configs)

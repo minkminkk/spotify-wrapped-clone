@@ -6,7 +6,7 @@ services:
     # (https://airflow.apache.org/docs/apache-airflow/stable/configurations-ref.html#)
     env_file: ./containers/airflow/airflow.env
     volumes:
-      - ./src/dags:/opt/airflow/dags
+      - ./dags:/opt/airflow/dags
       - ./logs/airflow:/opt/airflow/logs
     ports:
       - "8080:8080"

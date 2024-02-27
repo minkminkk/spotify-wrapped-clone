@@ -3,7 +3,7 @@ from queue import Queue
 from collections import defaultdict
 import logging
 import requests
-from utils.spotify_api_client.checks import check_response_json
+from include.spotify_api_client.checks import check_response_json
 
 
 class APISession:
@@ -83,8 +83,8 @@ class APISession:
         q: str, 
         type: str | List[str],
         market: str | None = None, 
-        limit: int = None,
-        offset: int = None,
+        limit: int | None = None,
+        offset: int | None = None,
         include_external: str | None = None,
         recursive: bool = False,
         max_pages: int = 5
@@ -130,7 +130,7 @@ class APISession:
             response.raise_for_status()
             check_response_json(response)
 
-            return r_json
+            return response.json()
         else:   # follow next URLs in response
             # NOTE: this implementation is very hard to test because total amount
             # of items returned from Spotify changes through each request.

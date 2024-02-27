@@ -1,0 +1,12 @@
+mongo_default:
+  conn_type: mongodb+srv
+  login: admin
+  password: admin
+  host: spotifydb.ake8run.mongodb.net
+  extra:
+    srv: true
+
+spark_default:
+  conn_type: spark
+  host: spark-master
+  port: 7077
