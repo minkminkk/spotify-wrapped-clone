@@ -29,7 +29,7 @@ from pymongo.errors import BulkWriteError
 def scrape_spotify_api():
     @task
     def get_access_token():
-        from utils.spotify_api_client.auth \
+        from include.spotify_api_client.auth \
             import ClientAuthenticator, ClientCredentialsStrategy
         
         # Get client_id and client secret for auth
@@ -58,7 +58,7 @@ def scrape_spotify_api():
         }
     )
     def request_data(access_token: dict[str, Any]):
-        from utils.spotify_api_client.session import APISession
+        from include.spotify_api_client.session import APISession
 
         @task
         def get_genres(access_token: dict):
@@ -221,7 +221,7 @@ def scrape_spotify_api():
     @task
     def generate_user_profiles(no_users: int):
         from faker import Faker
-        from utils.faker_custom_providers import user_info
+        from include.faker_custom_providers import user_info
 
         fake = Faker()
         fake.add_provider(user_info.Provider)
@@ -313,4 +313,9 @@ def scrape_spotify_api():
     [insert_albums, insert_artists, insert_tracks, insert_users] >> cleanup
 
 
-scrape_spotify_api()
+run = scrape_spotify_api()
+
+
+if __name__ == "__main__":
+    run.test()
+
