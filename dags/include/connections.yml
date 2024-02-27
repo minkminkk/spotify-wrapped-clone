@@ -1,5 +1,5 @@
 mongo_default:
-  conn_type: mongodb+srv
+  conn_type: mongo
   login: admin
   password: admin
   host: spotifydb.ake8run.mongodb.net

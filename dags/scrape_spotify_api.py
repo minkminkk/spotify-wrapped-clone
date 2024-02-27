@@ -34,7 +34,7 @@ def scrape_spotify_api():
         # Get client_id and client secret for auth
         client_id = Variable.get("spotify_webapi_client_id", None)
         client_secret = Variable.get("spotify_webapi_client_secret", None)
-
+        print(client_id, client_secret)
         if not client_id or not client_secret:
             error_msg = "Variables spotify_webapi_client_id and " \
                 + "spotify_webapi_client_secret not found."
@@ -83,8 +83,7 @@ def scrape_spotify_api():
                             type = "track",
                             limit = 50,
                             offset = 0,
-                            recursive = True,
-                            max_pages = 3
+                            recursive = False
                         )["tracks"]
                 ]
                 
@@ -235,6 +234,7 @@ def scrape_spotify_api():
     db = client["spotifydb"]
 
 
+    # TODO: Move away from using "try except" for batch inserts
     @task_group(group_id = "insert_to_mongo", prefix_group_id = False)
     def insert_to_mongo():
         # MongoDB do not have key duplicate support, therefore using
@@ -243,8 +243,6 @@ def scrape_spotify_api():
         # NOTE: This approach is not ACID-safe therefore data could be
         # partially inserted in case of other exceptions
         # https://pymongo.readthedocs.io/en/stable/examples/bulk.html
-        from functools import reduce
-
         @task
         def insert_albums(task_instance: TaskInstance):
             results = task_instance.xcom_pull(
@@ -254,7 +252,7 @@ def scrape_spotify_api():
             try:
                 db["albums"].insert_many(results, ordered = False)
             except BulkWriteError as e:
-                pass    # TODO: Move away from try except
+                pass
 
         @task
         def insert_artists(task_instance: TaskInstance):
@@ -262,7 +260,7 @@ def scrape_spotify_api():
             try:
                 db["artists"].insert_many(results, ordered = False)
             except BulkWriteError as e:
-                pass    # TODO: Move away from try except
+                pass
 
         @task
         def insert_tracks(task_instance: TaskInstance):
@@ -270,7 +268,7 @@ def scrape_spotify_api():
             try:
                 db["tracks"].insert_many(results, ordered = False)
             except BulkWriteError as e:
-                pass    # TODO: Move away from try except
+                pass
 
         @task
         def insert_users(task_instance: TaskInstance):
@@ -278,7 +276,7 @@ def scrape_spotify_api():
             try:
                 db["users"].insert_many(results, ordered = False)
             except BulkWriteError as e:
-                pass    # TODO: Move away from try except
+                pass
 
         return [
             insert_albums(), insert_artists(), insert_tracks(), insert_users()
