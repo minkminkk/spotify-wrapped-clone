@@ -1,5 +1,5 @@
 import pytest
-from utils.spotify_api_client import auth
+from include.spotify_api_client import auth
 
 
 @pytest.fixture(scope = "module")
