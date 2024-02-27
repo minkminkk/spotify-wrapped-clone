@@ -283,11 +283,11 @@ def scrape_spotify_api():
     
 
     # Task run successfully but XCom of DAG run not deleted 
-    # TODO: Make this work
+    # TODO: Make this work (or switch to another approach not using XCom)
     @provide_session
     @teardown
     def clean_xcom(session, run_id: str):
-        session.query(XCom).filter(XCom.dag_run_id == run_id).delete()
+        session.query(XCom).filter(XCom.run_id == run_id).delete()
         session.commit()
 
     
@@ -314,7 +314,6 @@ run = scrape_spotify_api()
 
 if __name__ == "__main__":
     # To test DAG locally; python dag_file.py
-    from pendulum import datetime
     from include.dag_test_config import local_test_configs
     
     run.test(**local_test_configs)
