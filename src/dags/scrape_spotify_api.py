@@ -95,9 +95,9 @@ def scrape_spotify_api():
         genres = get_genres(access_token)
         track_obj_list_maparg = search_tracks \
             .partial(access_token = access_token) \
-            .expand(genre = ["alternative"])
+            .expand(genre = genres)
         
-        return track_obj_list_maparg
+        return [genres, track_obj_list_maparg]
         
 
     """Process gathered data"""
@@ -212,11 +212,8 @@ def scrape_spotify_api():
             return track_info
         
         albums = parse_album_info()
-        # album_artists = parse_artists_in_albums()
         artists = parse_artist_info()
         tracks = parse_track_info()
-
-        albums >> artists
 
         return [albums, artists, tracks]
     
@@ -230,7 +227,6 @@ def scrape_spotify_api():
         fake.add_provider(user_info.Provider)
 
         users = [fake.user_profile() for _ in range(no_users)]
-        print(users[:5])
         return users
 
 
@@ -301,19 +297,20 @@ def scrape_spotify_api():
     
     # Execute tasks
     access_token = get_access_token()
-    initial_data = request_data(access_token)
-    processed_data = process_data()
-    users = generate_user_profiles(1000)
-    insert_mongo = insert_to_mongo()
+    genres, track_objs = request_data(access_token)
+    albums, artists, tracks = process_data()
+    users = generate_user_profiles(no_users = 1000)
+    insert_albums, insert_artists, insert_tracks, insert_users \
+        = insert_to_mongo()
     cleanup = clean_xcom()
     
     # Set dependencies between task groups
-    access_token >> initial_data >> processed_data
-    processed_data[0] >> insert_mongo[0]
-    processed_data[1] >> insert_mongo[1]
-    processed_data[2] >> insert_mongo[2]
-    users >> insert_mongo[3]
-    insert_mongo >> cleanup
+    access_token >> genres >> track_objs >> [albums, artists, tracks]
+    albums >> [insert_albums, artists]
+    artists >> insert_artists
+    tracks >> insert_tracks
+    users >> insert_users
+    [insert_albums, insert_artists, insert_tracks, insert_users] >> cleanup
 
 
 scrape_spotify_api()

@@ -17,3 +17,22 @@ def dag(dagbag):
 def test_dag_loaded(dagbag, dag):
     assert dagbag.import_errors == {}
     assert dag is not None
+
+
+def test_dag_struct(dag):
+    expected_dag_struct = {
+        "get_access_token": ["get_genres", "search_tracks"],
+        "get_genres": ["search_tracks"],
+        "search_tracks": [],
+    }   # Downstream list of each task
+
+    # Using dag.task_dict == expected_dag_struct will fail the test
+    # because dag maps task_id (str) -> Task objects
+    # while expected_dag_struct maps task_id (str) -> task_ids (List[str])
+    # Hence we assert by keys first and then get each task_id in 
+    # each Task object and compare
+    assert dag.task_dict.keys() == expected_dag_struct.keys()
+    for task_id, expected_downstream in expected_dag_struct.items():
+        assert dag.has_task(task_id)
+        task = dag.get_task(task_id)
+        assert task.downstream_task_ids == set(expected_downstream)

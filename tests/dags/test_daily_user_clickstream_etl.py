@@ -33,7 +33,6 @@ def test_dag_loaded(dagbag, dag):
 #     # each Task object and compare
 #     assert dag.task_dict.keys() == expected_dag_struct.keys()
 #     for task_id, expected_downstream in expected_dag_struct.items():
-#         print(task_id)
 #         assert dag.has_task(task_id)
 #         task = dag.get_task(task_id)
 #         assert task.downstream_task_ids == set(expected_downstream)
