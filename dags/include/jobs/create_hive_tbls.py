@@ -90,16 +90,16 @@ def populate_date_df(start_date: str, end_date: str) -> DataFrame:
     df_dates = spark.sql(f"""
         SELECT 
             (
-                (YEAR(date_date) * 10000) 
-                + MONTH(date_date) * 100 
-                + DAY(date_date)
+                (YEAR(full_date) * 10000) 
+                + MONTH(full_date) * 100 
+                + DAY(full_date)
             ) AS date_dim_id,
             full_date, 
-            YEAR(date_date) AS year,
-            MONTH(date_date) AS month,
-            DAY(date_date) AS day,
-            WEEKOFYEAR(date_date) AS week_of_year,
-            DAYOFWEEK(date_date) AS day_of_week
+            YEAR(full_date) AS year,
+            MONTH(full_date) AS month,
+            DAY(full_date) AS day,
+            WEEKOFYEAR(full_date) AS week_of_year,
+            DAYOFWEEK(full_date) AS day_of_week
         FROM dates;
     """)
 
