@@ -315,6 +315,6 @@ run = scrape_spotify_api()
 
 if __name__ == "__main__":
     # To test DAG locally; python dag_file.py
-    from include.dag_test_config import local_test_configs
+    from include.config.dag_test_config import local_test_configs
     
     run.test(**local_test_configs)

@@ -31,7 +31,7 @@ from airflow.providers.apache.spark.decorators import pyspark
 )
 def daily_user_clickstream_etl():
     mongo_hook = MongoHook("client_id")
-    
+
 
     
 run = daily_user_clickstream_etl()
@@ -39,6 +39,6 @@ run = daily_user_clickstream_etl()
 
 if __name__ == "__main__":
     # To test DAG locally; python dag_file.py
-    from include.dag_test_config import local_test_configs
+    from include.config.dag_test_config import local_test_configs
     
     run.test(**local_test_configs)

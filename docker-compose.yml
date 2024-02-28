@@ -12,12 +12,16 @@ services:
   spark-master:
     image: bitnami/spark:3.5
     env_file: ./containers/spark/spark-master.env
+    volumes:
+      - ./containers/spark/spark-defaults.conf:/opt/bitnami/spark/conf/spark-defaults.conf
     ports:
       - 8081:8080
 
   spark-worker:
     image: bitnami/spark:3.5
     env_file: ./containers/spark/spark-worker.env
+    volumes:
+      - ./containers/spark/spark-defaults.conf:/opt/bitnami/spark/conf/spark-defaults.conf
 
   namenode:
     image: apache/hadoop:3
