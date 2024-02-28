@@ -97,7 +97,7 @@ def test_events_from_one_user(fake):
         cur_event_name = "stop" if cur_event_name == "play" else "play"
 
 
-def test_events_from_users(fake):
+def test_events_from_multiple_users(fake):
     kwargs = {
         "start_dt": datetime(2018, 1, 1, 1),
         "end_dt": datetime(2018, 1, 1, 2),
@@ -106,13 +106,13 @@ def test_events_from_users(fake):
     }
 
     # Check when user_id_list is empty
-    res = [_ for _ in fake.events_from_users(**kwargs)]
+    res = [_ for _ in fake.events_from_multiple_users(**kwargs)]
     assert len(res) == 0
     
     # Normal input - add user_id_list to input
     kwargs["user_id_list"] = [fake.user_id() for _ in range(5)]
         # generating valid user ids is done by Spotify provider
-    res = [_ for _ in fake.events_from_users(**kwargs)]
+    res = [_ for _ in fake.events_from_multiple_users(**kwargs)]
 
     # Check if no new user_ids are generated within the method
     res_users = set({event["user_id"] for event in res})

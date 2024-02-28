@@ -169,7 +169,7 @@ class ClickstreamProvider(*providers):
                 )       # only exit loop after stop event
             cur_end_dt = min(end_dt, cur_start_dt + timedelta(minutes = 10))
 
-    def events_from_users(
+    def events_from_multiple_users(
         self, 
         start_dt: datetime, 
         end_dt: datetime,
