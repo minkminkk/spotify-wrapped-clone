@@ -13,7 +13,7 @@ from pymongo.errors import BulkWriteError
 @dag(
     dag_id = "scrape_spotify_api",
     schedule = None,
-    start_date = pendulum.datetime(2018, 1, 1, tz = "UTC"),
+    start_date = pendulum.datetime(2024, 1, 1, tz = "UTC"),
     tags = ["scraping", "spotify", "api"],
     default_args = {
         "depends_on_past": False,
@@ -295,9 +295,10 @@ def scrape_spotify_api():
     access_token = get_access_token()
     genres, track_objs = request_data(access_token)
     albums, artists, tracks = process_data()
-    users = generate_user_profiles(no_users = 1000)
+    users = generate_user_profiles(no_users = 20)
     insert_albums, insert_artists, insert_tracks, insert_users \
         = insert_to_mongo()
+    client.close()
     cleanup = clean_xcom()
     
     # Set dependencies between task groups

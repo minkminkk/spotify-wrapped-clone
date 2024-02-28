@@ -2,8 +2,6 @@ services:
   airflow:
     build:
       context: ./containers/airflow
-    # Environment variables based on Airflow doc
-    # (https://airflow.apache.org/docs/apache-airflow/stable/configurations-ref.html#)
     env_file: ./containers/airflow/airflow.env
     volumes:
       - ./dags:/opt/airflow/dags
@@ -20,3 +18,31 @@ services:
   spark-worker:
     image: bitnami/spark:3.5
     env_file: ./containers/spark/spark-worker.env
+
+  namenode:
+    image: apache/hadoop:3
+    hostname: namenode
+    command: ["hdfs", "namenode"]
+    ports:
+      - 9870:9870
+    env_file:
+      - ./containers/hdfs/hdfs.env
+    environment:
+      ENSURE_NAMENODE_DIR: "/tmp/hadoop-root/dfs/name"
+  
+  datanode:
+    image: apache/hadoop:3
+    command: ["hdfs", "datanode"]
+    env_file:
+      - ./containers/hdfs/hdfs.env
+
+  hive-metastore:
+    image: apache/hive:3.1.3
+    hostname: hive-metastore
+    depends_on:
+      - namenode
+    environment:
+      - HIVE_CUSTOM_CONF_DIR=/hive-custom-conf
+      - SERVICE_NAME=metastore
+    volumes:
+      - ./containers/hive-metastore:/hive-custom-conf

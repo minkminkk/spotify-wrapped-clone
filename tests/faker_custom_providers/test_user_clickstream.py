@@ -18,47 +18,73 @@ def fake():
 def test_dates():   # start_dt, end_dt
     return datetime(2018, 1, 1, 1), datetime(2018, 1, 1, 5)
 
-@pytest.fixture
-def max_events_per_user():
-    return 4
-
 
 def test_tracklist_for_user(fake):
+    # Check when min_tracks > max_tracks
     with pytest.raises(ValueError):
         fake.tracklist_for_user(3, 2)
 
+    # Check when min_tracks == max_tracks
     assert len(fake.tracklist_for_user(min_tracks = 0,  max_tracks = 0)) == 0
     assert len(fake.tracklist_for_user(min_tracks = 2, max_tracks = 2)) == 2
-    assert 1 <= len(
-        fake.tracklist_for_user(min_tracks = 1, max_tracks = 3)
-    ) <= 3
-
-
-def test_events_from_user_between(fake, test_dates, max_events_per_user):
-    start_dt, end_dt = test_dates
-    args = *test_dates, "_", max_events_per_user
-    res = [_ for _ in fake.events_from_user_between(*args)]
     
+    # Check no duplicate tracks in resulting tracklist
+    sample_track_ids = ["track" + str(n) for n in range(20)] # length 20
+    track_sample = fake.tracklist_for_user(
+        min_tracks = 10, 
+        max_tracks = 15,
+        sample_track_ids = sample_track_ids
+    )
+    assert len(set(track_sample)) == len(track_sample)
+
+    # Check when min_tracks > number of sample track ids
+    with pytest.raises(ValueError):
+        fake.tracklist_for_user(
+            min_tracks = 25, 
+            max_tracks = 30, 
+            sample_track_ids = sample_track_ids
+        )
+
+
+def test_events_from_one_user(fake):
     # Check cases of invalid input
-    for sdt, edt in [
+    invalid_cases = [
         ("2018-01-01", "2018-01-02 00:00:00"),  # Invalid dt string format
         ("2018-13-01 00:00:00", "2018-13-02 00:00:00"), # invalid month field
         ("2018-01-31 00:00:00", "2018-01-32 00:00:00"), # invalid day field
         (datetime(2018, 1, 29), datetime(2018, 1, 28))  # start_dt > end_dt
-    ]:
+    ]
+    for sdt, edt in invalid_cases:
         with pytest.raises(ValueError):
-            for _ in fake.events_from_user_between(sdt, edt, "_", 1):
+            for _ in fake.events_from_one_user(sdt, edt, "_", 1):
                 break
+    
+    # Every arg is specified
+    kwargs = {
+        "start_dt": datetime(2018, 1, 1, 1),
+        "end_dt": datetime(2018, 1, 1, 5),
+        "user_id": "_",
+        "max_events": 10
+    }
+    res = [_ for _ in fake.events_from_one_user(**kwargs)]
 
     # Check if generate over max_events
-    assert len(res) <= max_events_per_user
+    assert len(res) <= kwargs["max_events"]
+    
+    # Check if user_id is as specified
+    assert res[0]["user_id"] == "_"
 
-    # Check result fields
+    # Case when user_id then max_events not specified
+    del kwargs["user_id"]
+    res = [_ for _ in fake.events_from_one_user(**kwargs)]
+    del kwargs["max_events"]
+    res.extend([_ for _ in fake.events_from_one_user(**kwargs)])
+
     cur_event_name = "play"
     for event in res:
         assert all([c in string.hexdigits for c in event["event_id"]]) \
             and len(event["event_id"]) == 64    # sha256 field
-        assert start_dt <= event["event_ts"] <= end_dt
+        assert kwargs["start_dt"] <= event["event_ts"] <= kwargs["end_dt"]
         assert event["event_name"] == cur_event_name
         assert all([c in string.hexdigits for c in event["track_id"]]) \
             and len(event["track_id"]) == 22    # 22 hexdigits
@@ -66,17 +92,23 @@ def test_events_from_user_between(fake, test_dates, max_events_per_user):
         cur_event_name = "stop" if cur_event_name == "play" else "play"
 
 
-def test_events_from_users_between(fake, test_dates, max_events_per_user):
+def test_events_from_users(fake):
+    kwargs = {
+        "start_dt": datetime(2018, 1, 1, 1),
+        "end_dt": datetime(2018, 1, 1, 2),
+        "user_id_list": [],
+        "max_events_per_user": None
+    }
+
     # Check when user_id_list is empty
-    res = [_ for _ in fake.events_from_users_between(*test_dates, [])]
+    res = [_ for _ in fake.events_from_users(**kwargs)]
     assert len(res) == 0
     
-    # Normal input
-    user_id_list = [fake.user_id() for _ in range(3)]
+    # Normal input - add user_id_list to input
+    kwargs["user_id_list"] = [fake.user_id() for _ in range(5)]
         # generating valid user ids is done by Spotify provider
-    args = *test_dates, user_id_list, max_events_per_user
-    res = [_ for _ in fake.events_from_users_between(*args)]
+    res = [_ for _ in fake.events_from_users(**kwargs)]
 
-    # Check user ids still hold from input to output
-    users_set = set(map(lambda x: x["user_id"], res))
-    assert users_set == set(user_id_list)
+    # Check if no new user_ids are generated within the method
+    res_users = set({event["user_id"] for event in res})
+    assert res_users == set(kwargs["user_id_list"])
