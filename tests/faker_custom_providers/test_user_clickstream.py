@@ -64,6 +64,7 @@ def test_events_from_one_user(fake):
         "start_dt": datetime(2018, 1, 1, 1),
         "end_dt": datetime(2018, 1, 1, 5),
         "user_id": "_",
+        "user_tracklist": ["track" + str(n) for n in range(3)],
         "max_events": 10
     }
     res = [_ for _ in fake.events_from_one_user(**kwargs)]
@@ -71,11 +72,15 @@ def test_events_from_one_user(fake):
     # Check if generate over max_events
     assert len(res) <= kwargs["max_events"]
     
-    # Check if user_id is as specified
-    assert res[0]["user_id"] == "_"
+    # Check if user_id and track_ids is as specified
+    assert all([event["user_id"] == "_" for event in res])
+    assert all(
+        [event["track_id"] in kwargs["user_tracklist"] for event in res]
+    )
 
-    # Case when user_id then max_events not specified
+    # Case when user_id, user_tracklist, then max_events not specified
     del kwargs["user_id"]
+    del kwargs["user_tracklist"]
     res = [_ for _ in fake.events_from_one_user(**kwargs)]
     del kwargs["max_events"]
     res.extend([_ for _ in fake.events_from_one_user(**kwargs)])

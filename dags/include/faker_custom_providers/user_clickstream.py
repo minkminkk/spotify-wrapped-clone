@@ -74,6 +74,7 @@ class ClickstreamProvider(*providers):
         start_dt: datetime | str,
         end_dt: datetime | str,
         user_id: str | None = None,
+        user_tracklist: List[str] | None = None,
         max_events: int | None = None
     ) -> Generator[dict, None, None]:
         """Generate events for a particular user between 2 timestamps.
@@ -81,7 +82,9 @@ class ClickstreamProvider(*providers):
 
         :param start_dt: start datetime
         :param end_dt: end datetime
-        :param user_id: ID of user, generate random user_id if not specified
+        :param user_id: ID of user, randomly generated if not specified
+        :param user_tracklist: track IDs from tracks,
+            randomly generated if not specified
         :param max_events: maximum number of events generated in case the
             time period is too large, defaults to None
         :yield: information about events
@@ -116,8 +119,17 @@ class ClickstreamProvider(*providers):
 
         # Per-user param because we do not want track_id to be completely random
         # Implement in list comprehension would throw error
-        tracklist = self.tracklist_for_user(min_tracks = 5, max_tracks = 30)
-        track_id = choice(tracklist)
+        if not user_tracklist:   # generate if not specified
+            user_tracklist = self.tracklist_for_user(
+                min_tracks = 5, 
+                max_tracks = 30
+            )
+        else:
+            user_tracklist = sample(
+                user_tracklist, 
+                k = min(randint(5, 30), len(user_tracklist))
+            )
+        track_id = choice(user_tracklist)
 
         # Initial timestamps and result count
         cur_start_dt = start_dt
@@ -146,7 +158,7 @@ class ClickstreamProvider(*providers):
 
             cur_events += 1
             if event_name == "stop":
-                track_id = choice(tracklist)  # pick next song
+                track_id = choice(user_tracklist)  # pick next song
                 event_name = "play"
                 cur_start_dt = event_ts + timedelta(minutes = randint(1, 10))
                     # assume new song start 1-10 mins after stop
