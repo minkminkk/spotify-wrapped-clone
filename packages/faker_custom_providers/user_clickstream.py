@@ -140,7 +140,7 @@ class ClickstreamProvider(*providers):
         # Increment timestamps for each record until 
         # end of time period or max events reached
         # After above conditions are met, loop exits at stop event.
-        while cur_start_dt <= cur_end_dt and cur_events <= max_events:
+        while cur_start_dt < cur_end_dt and cur_events <= max_events:
             event_ts = super().date_time_between(
                 start_date = cur_start_dt,
                 end_date = cur_end_dt
