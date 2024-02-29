@@ -14,10 +14,10 @@ def main(access_token: dict, genres: List[str]):
     sc = spark.sparkContext
     
     # Request data from API - only when respective tables are empty
-    tracks_count = spark.table("dim_tracks").count()
-    artists_count = spark.table("dim_tracks").count()
+    tracks_empty = spark.table("dim_tracks").isEmpty()
+    artists_empty = spark.table("dim_tracks").isEmpty()
     
-    if tracks_count == 0 or artists_count == 0:
+    if tracks_empty or artists_empty:
         with APISession(access_token) as client_session:
             rdd_track_objs = sc.emptyRDD()
 
@@ -37,10 +37,10 @@ def main(access_token: dict, genres: List[str]):
         rdd_track_objs.cache()
 
         # Process and write data
-        if tracks_count == 0:
+        if tracks_empty:
             df_tracks = rdd_objs_to_df_tracks(rdd_track_objs)
             df_tracks.write.insertInto("dim_tracks")
-        if artists_count == 0:
+        if artists_empty:
             df_artists = rdd_objs_to_df_artists(rdd_track_objs)
             df_artists.write.insertInto("dim_artists")
 
@@ -51,12 +51,12 @@ def main(access_token: dict, genres: List[str]):
     # Simple logic to avoid appending duplicated generated data
     # If some of the rows are deleted manually, this logic would not be able
     # to detect if rows are fully loaded
-    if spark.table("dim_users").count() == 0:
+    if spark.table("dim_users").isEmpty():
         df_users = generate_df_users(no_users = 10000)
         df_users.write.insertInto("dim_users")
-    if spark.table("dim_dates").count() == 0:
+    if spark.table("dim_dates").isEmpty():
         df_dates = generate_df_dates("2018-01-01", "2028-01-01")
-        df_users.write.insertInto("dim_dates")
+        df_dates.write.insertInto("dim_dates")
 
 
 def rdd_objs_to_df_tracks(rdd_objs: RDD) -> DataFrame:
@@ -81,13 +81,8 @@ def rdd_objs_to_df_tracks(rdd_objs: RDD) -> DataFrame:
     df_tracks = spark \
         .createDataFrame(rdd_tracks) \
         .select(
-            "track_id", 
-            "track_name", 
-            "track_duration_ms",
-            "artist_ids",
-            "album_name", 
-            "album_type", 
-            "album_release_date"
+            *("track_id", "track_name", "track_duration_ms"),
+            *("artist_ids", "album_name", "album_type", "album_release_date")
         )
     
     return df_tracks

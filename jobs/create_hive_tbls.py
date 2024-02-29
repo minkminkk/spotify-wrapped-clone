@@ -9,7 +9,6 @@ def main():
     # Create SparkSession with Hive support
     spark = SparkSession.builder \
         .appName("Prepare Hive tables") \
-        .description("Create Hive tables. Load dates dimension data.") \
         .enableHiveSupport() \
         .getOrCreate()
 
