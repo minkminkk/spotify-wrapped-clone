@@ -1,13 +1,15 @@
-from typing import List, Any
+from typing import TYPE_CHECKING, List, Any
 import pendulum
 import logging
 
 from airflow.decorators import dag, task, teardown, task_group
-from airflow.models.taskinstance import TaskInstance
 from airflow.models import XCom
 from airflow.utils.db import provide_session
 from airflow.providers.mongo.hooks.mongo import MongoHook  
 from pymongo.errors import BulkWriteError      
+
+if TYPE_CHECKING:
+    from airflow.models.taskinstance import TaskInstance
 
 @dag(
     dag_id = "scrape_spotify_api",

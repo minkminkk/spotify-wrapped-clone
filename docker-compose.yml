@@ -6,6 +6,7 @@ services:
     volumes:
       - ./dags:/opt/airflow/dags
       - ./jobs:/jobs
+      - ./packages:/packages
       - ./logs/airflow:/opt/airflow/logs
     ports:
       - "8080:8080"
@@ -15,6 +16,7 @@ services:
     env_file: ./containers/spark/spark-master.env
     volumes:
       - ./containers/spark/spark-defaults.conf:/opt/bitnami/spark/conf/spark-defaults.conf
+      - ./packages:/packages
     ports:
       - 8081:8080
 
@@ -23,6 +25,7 @@ services:
     env_file: ./containers/spark/spark-worker.env
     volumes:
       - ./containers/spark/spark-defaults.conf:/opt/bitnami/spark/conf/spark-defaults.conf
+      - ./packages:/packages
 
   namenode:
     image: apache/hadoop:3

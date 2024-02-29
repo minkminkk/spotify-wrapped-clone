@@ -1,4 +1,8 @@
-from pyspark.sql import SparkSession, DataFrame
+from typing import TYPE_CHECKING
+from pyspark.sql import SparkSession
+
+if TYPE_CHECKING:
+    from pyspark.sql import DataFrame
 
 
 def main():
