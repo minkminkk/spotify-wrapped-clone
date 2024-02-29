@@ -11,8 +11,8 @@ import pendulum
 
 from airflow.decorators import dag, task, task_group
 from airflow.providers.mongo.hooks.mongo import MongoHook
-from airflow.providers.apache.spark.operators.spark_submit \
-    import SparkSubmitOperator
+from include.custom_hooks_operators.spark_submit \
+    import CustomSparkSubmitOperator
 
 
 @dag(
@@ -29,13 +29,14 @@ from airflow.providers.apache.spark.operators.spark_submit \
     }
 )
 def daily_user_clickstream_etl():
-    SparkSubmitOperator(
-        task_id = "create_hive_tbls",
-        application = "/opt/airflow/dags/include/jobs/create_hive_tbls.py"
+    hive_tbls = CustomSparkSubmitOperator(
+        task_id = "prepare_hive_tbls",
+        application = "/jobs/create_hive_tbls.py",
+        name = "Prepare Hive tables",
+        properties_file = "/jobs/spark-defaults.conf"
     )
 
 
-    
 run = daily_user_clickstream_etl()
 
 

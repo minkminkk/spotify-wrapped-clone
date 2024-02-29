@@ -5,6 +5,7 @@ services:
     env_file: ./containers/airflow/airflow.env
     volumes:
       - ./dags:/opt/airflow/dags
+      - ./jobs:/jobs
       - ./logs/airflow:/opt/airflow/logs
     ports:
       - "8080:8080"

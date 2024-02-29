@@ -68,7 +68,6 @@ def scrape_spotify_api():
             with APISession(access_token) as session:
                 fields = ("id", "name", "duration_ms", "artists", "album")
 
-
                 tracks = [
                     {f: item[f] for f in fields} \
                         for item in session.search_items(

@@ -4,11 +4,12 @@ from pyspark.sql import SparkSession, DataFrame
 def main():
     # Create SparkSession with Hive support
     spark = SparkSession.builder \
-        .appName("Create Hive tables") \
+        .appName("Prepare Hive tables") \
+        .description("Create Hive tables. Load dates dimension data.") \
         .enableHiveSupport() \
         .getOrCreate()
 
-
+    # DDL queries for creating Hive tables
     q_tracks = """
         CREATE TABLE IF NOT EXISTS dim_tracks (
             track_dim_id        BIGINT,
@@ -67,6 +68,7 @@ def main():
     for q in (q_tracks, q_artists, q_users, q_dates, q_events):
         spark.sql(q)
 
+    # Populate dates dimension table
     df_dates = populate_date_df("2018-01-01", "2028-01-01")
     df_dates.write.insertInto("dim_dates", overwrite = True)
 
