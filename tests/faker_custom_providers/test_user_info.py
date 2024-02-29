@@ -20,12 +20,12 @@ def user_profile(fake):
 
 def test_attrs(user_profile):
     # Do not need value test because
-    # Test for _id value already included in test_spotify.test_user_id
+    # Test for user_id value already included in test_spotify.test_user_id
     # All other fields come in Faker's profile standard provider
     # (https://faker.readthedocs.io/en/master/providers/faker.providers.profile.html)
     attrs = set(
         [
-            "_id", # test for this field 
+            "user_id", # no need tests for value of this field 
             "username", 
             "name", 
             "sex", 
