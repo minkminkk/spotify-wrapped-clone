@@ -1,6 +1,6 @@
 from typing import List
 from pyspark.sql import SparkSession
-from session import APISession
+from spotify_api_client.session import APISession
 
 
 def main(access_token: dict, genres: List[str]):
@@ -36,7 +36,6 @@ def main(access_token: dict, genres: List[str]):
         df_tracks.show(20)
         df_tracks.printSchema()
     
-
 
 if __name__ == "__main__":
     import argparse

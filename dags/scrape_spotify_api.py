@@ -32,7 +32,7 @@ def scrape_spotify_api():
         """client_id, client_secret is templated via variables 
         and raise error if not exist.
         """
-        from include.spotify_api_client.auth \
+        from spotify_api_client.auth \
             import ClientAuthenticator, ClientCredentialsStrategy
 
         # Generate auth object and get access token
@@ -52,7 +52,7 @@ def scrape_spotify_api():
         }
     )
     def request_data(access_token: dict[str, Any]):
-        from include.spotify_api_client.session import APISession
+        from spotify_api_client.session import APISession
 
         @task
         def get_genres(access_token: dict):
@@ -213,7 +213,7 @@ def scrape_spotify_api():
     @task
     def generate_user_profiles(no_users: int):
         from faker import Faker
-        from include.faker_custom_providers import user_info
+        from faker_custom_providers import user_info
 
         fake = Faker()
         fake.add_provider(user_info.Provider)
