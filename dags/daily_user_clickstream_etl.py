@@ -37,6 +37,7 @@ def daily_user_clickstream_etl():
     )
 
 
+
 run = daily_user_clickstream_etl()
 
 

@@ -72,52 +72,6 @@ def main():
     for q in (q_tracks, q_artists, q_users, q_dates, q_events):
         spark.sql(q)
 
-    # Populate dates dimension table
-    cur_rows = spark.table("dim_dates").count()
-    
-    # Simple logic to avoid overwriting
-    # If some of the rows are deleted manually, this logic would not be able
-    # to detect if rows are fully loaded
-    if cur_rows == 0:
-        df_dates = populate_date_df("2018-01-01", "2028-01-01")
-        df_dates.write.insertInto("dim_dates")
-
-
-def populate_date_df(start_date: str, end_date: str) -> DataFrame:
-    """Populate calendar date from start_date to end_date"""
-    spark = SparkSession.getActiveSession()
-
-    # Reference
-    # (https://3cloudsolutions.com/resources/generate-a-calendar-dimension-in-spark/)
-    spark.sql(f"""
-        SELECT EXPLODE(
-            SEQUENCE(
-                TO_DATE('{start_date}'), 
-                TO_DATE('{end_date}'), 
-                INTERVAL 1 day
-            )
-        ) AS full_date;
-    """) \
-        .createOrReplaceTempView("dates")
-    df_dates = spark.sql(f"""
-        SELECT 
-            (
-                (YEAR(full_date) * 10000) 
-                + MONTH(full_date) * 100 
-                + DAY(full_date)
-            ) AS date_dim_id,
-            full_date, 
-            YEAR(full_date) AS year,
-            MONTH(full_date) AS month,
-            DAY(full_date) AS day,
-            WEEKOFYEAR(full_date) AS week_of_year,
-            DAYOFWEEK(full_date) AS day_of_week
-        FROM dates;
-    """)
-
-    return df_dates
-
-
 
 if __name__ == "__main__":
     main()
