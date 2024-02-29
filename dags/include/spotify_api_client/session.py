@@ -59,9 +59,7 @@ class APISession:
     def get_genres(self) -> dict:
         """Get all available genres in Spotify API.
 
-        :raises Exception: cannot parse JSON or unexpected JSON schema
         :return: response of all available genres
-        :rtype: dict
         """
 
         url = self.root_url + "/recommendations/available-genre-seeds"
@@ -92,25 +90,16 @@ class APISession:
         """Query items (albums, tracks, artists, playlists...).
 
         :param q: query string, defined [here](https://developer.spotify.com/documentation/web-api/reference/search)
-        :type q: str
         :param type: item types to search
-        :type type: str | List[str]
         :param market: country code of market, defaults to None
-        :type market: str | None, optional
         :param limit: maximum number of results to return in each item type,
             defaults to None
-        :type limit: int, optional
         :param offset: offset from first result, defaults to None
-        :type offset: int, optional
         :param include_external: include external audio, defaults to None
-        :type include_external: str | None, optional
         :param recursive: whether to follow URLs in `next` tags, defaults to False
-        :type recursive: bool, optional
         :param max_pages: if recursive is True, follow until max_pages retrieved
-        :type max_pages: int, optional
         :return: response containing query results, stripped unrelated metadata
             (limit, offset, total, next URLs...)
-        :rtype: dict
         """
 
         url = self.root_url + "/search"
@@ -124,13 +113,16 @@ class APISession:
         }
 
         # 2 different implementations based on `recursive` arg
+        res = defaultdict(list)
         if not recursive:
             response = self.http_session.get(url, params = params)
 
             response.raise_for_status()
             check_response_json(response)
 
-            return response.json()
+            r_json = response.json()
+            for key in r_json.keys():
+                res[key].extend(r_json[key]["items"])
         else:   # follow next URLs in response
             # NOTE: this implementation is very hard to test because total amount
             # of items returned from Spotify changes through each request.
@@ -140,7 +132,6 @@ class APISession:
                 # construct first URL from base URL and params
 
             # Put URLs to waiting queue - done when queue is empty
-            res = defaultdict(list)
             q_urls = Queue()
             q_urls.put_nowait(prep_req.url)
 

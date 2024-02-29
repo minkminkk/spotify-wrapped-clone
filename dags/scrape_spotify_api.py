@@ -3,7 +3,6 @@ import pendulum
 import logging
 
 from airflow.decorators import dag, task, teardown, task_group
-from airflow.models.variable import Variable
 from airflow.models.taskinstance import TaskInstance
 from airflow.models import XCom
 from airflow.utils.db import provide_session
@@ -27,18 +26,12 @@ from pymongo.errors import BulkWriteError
 )
 def scrape_spotify_api():
     @task
-    def get_access_token():
+    def get_access_token(client_id, client_secret):
+        """client_id, client_secret is templated via variables 
+        and raise error if not exist.
+        """
         from include.spotify_api_client.auth \
             import ClientAuthenticator, ClientCredentialsStrategy
-        
-        # Get client_id and client secret for auth
-        client_id = Variable.get("spotify_webapi_client_id", None)
-        client_secret = Variable.get("spotify_webapi_client_secret", None)
-        print(client_id, client_secret)
-        if not client_id or not client_secret:
-            error_msg = "Variables spotify_webapi_client_id and " \
-                + "spotify_webapi_client_secret not found."
-            raise Exception(error_msg)
 
         # Generate auth object and get access token
         auth = ClientAuthenticator(client_id, client_secret)
@@ -75,6 +68,7 @@ def scrape_spotify_api():
             with APISession(access_token) as session:
                 fields = ("id", "name", "duration_ms", "artists", "album")
 
+
                 tracks = [
                     {f: item[f] for f in fields} \
                         for item in session.search_items(
@@ -83,7 +77,7 @@ def scrape_spotify_api():
                             limit = 50,
                             offset = 0,
                             recursive = False
-                        )["tracks"]
+                        )
                 ]
                 
                 logging.info(f"SUMMARY: Retrieved {len(tracks)} tracks")
@@ -286,19 +280,21 @@ def scrape_spotify_api():
     # TODO: Make this work (or switch to another approach not using XCom)
     @provide_session
     @teardown
-    def clean_xcom(session, run_id: str):
+    def clean_xcom(session, run_id):
         session.query(XCom).filter(XCom.run_id == run_id).delete()
         session.commit()
 
     
     # Execute tasks
-    access_token = get_access_token()
+    access_token = get_access_token(
+        client_id = "{{ var.value.get('spotify_webapi_client_id') }}",
+        client_secret = "{{ var.value.get('spotify_webapi_client_secret') }}"
+    )
     genres, track_objs = request_data(access_token)
     albums, artists, tracks = process_data()
     users = generate_user_profiles(no_users = 20)
     insert_albums, insert_artists, insert_tracks, insert_users \
         = insert_to_mongo()
-    client.close()
     cleanup = clean_xcom()
     
     # Set dependencies between task groups

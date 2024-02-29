@@ -7,11 +7,9 @@
 # 
 # if __name__ == "__main__":
 #     from include.dag_local_config_test import local_test_configs
-# 
 #     dag.test(**local_test_configs)
 # 
 
-from pendulum import datetime
 import os
 
 include_dir = os.path.dirname(__file__)

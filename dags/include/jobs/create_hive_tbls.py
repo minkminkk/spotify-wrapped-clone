@@ -25,7 +25,7 @@ def main():
         CREATE TABLE IF NOT EXISTS dim_artists (
             artist_dim_id   BIGINT,
             artist_id       CHAR(22),
-            artist_name     VARCHAR(120),
+            artist_name     VARCHAR(120)
         ) USING parquet;
     """
     q_users = """
@@ -35,7 +35,7 @@ def main():
             username        VARCHAR(64),
             name            VARCHAR(120),
             sex             CHAR(1),
-            address         VARCHAR(250)
+            address         VARCHAR(250),
             mail            VARCHAR(80),
             birthdate       DATE
         ) USING parquet;
@@ -61,10 +61,10 @@ def main():
             user_agent      VARCHAR(250),
             track_dim_id    BIGINT,
             date_dim_id     INT
-        ) USING parquet PARTITIONED BY date_dim_id;
+        ) USING parquet PARTITIONED BY (date_dim_id);
     """
 
-    for q in (q_tracks, q_artists, q_users, q_events):
+    for q in (q_tracks, q_artists, q_users, q_dates, q_events):
         spark.sql(q)
 
     df_dates = populate_date_df("2018-01-01", "2028-01-01")
