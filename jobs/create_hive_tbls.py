@@ -69,8 +69,14 @@ def main():
         spark.sql(q)
 
     # Populate dates dimension table
-    df_dates = populate_date_df("2018-01-01", "2028-01-01")
-    df_dates.write.insertInto("dim_dates", overwrite = True)
+    cur_rows = spark.table("dim_dates").count()
+    
+    # Simple logic to avoid overwriting
+    # If some of the rows are deleted manually, this logic would not be able
+    # to detect if rows are fully loaded
+    if cur_rows == 0:
+        df_dates = populate_date_df("2018-01-01", "2028-01-01")
+        df_dates.write.insertInto("dim_dates")
 
 
 def populate_date_df(start_date: str, end_date: str) -> DataFrame:
