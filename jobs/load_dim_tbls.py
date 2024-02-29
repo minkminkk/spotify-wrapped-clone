@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List
+from typing import List
 from pyspark.sql import SparkSession
 from spotify_api_client.session import APISession
 from faker import Faker

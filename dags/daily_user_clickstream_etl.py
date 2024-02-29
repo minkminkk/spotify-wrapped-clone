@@ -1,11 +1,9 @@
 import pendulum
 import logging
 
-from airflow.models.baseoperator import chain
 from airflow.utils.edgemodifier import Label
 from airflow.operators.empty import EmptyOperator
-from airflow.decorators import dag, task, task_group
-from airflow.providers.mongo.hooks.mongo import MongoHook
+from airflow.decorators import dag, task
 from airflow.providers.apache.spark.operators.spark_sql import SparkSqlOperator
 from include.custom_hooks_operators.spark_submit \
     import CustomSparkSubmitOperator
@@ -61,12 +59,21 @@ def daily_user_clickstream_etl():
     genres = get_genres(access_token)
 
 
-    hive_tbls = CustomSparkSubmitOperator(
+    # TODO: Maybe replace bunch of SQLOperator with SQLHook?
+    # Default SparkSQL kwargs
+    default_spark_sql_kwargs = {
+        "conn_id": "spark_default",
+        "master": "spark://spark-master:7077",
+        "conf": "spark.hive.metastore.uris=thrift://hive-metastore:9083"
+    }
+
+
+    hive_tbls = SparkSqlOperator(
         task_id = "create_hive_tbls",
-        application = "/jobs/create_hive_tbls.py",
-        name = "Prepare Hive tables",
-        properties_file = "/jobs/spark-defaults.conf"
-    )
+        sql = "/opt/airflow/dags/include/spark_tbls_init.sql",
+        name = "Create Hive tables",
+        **default_spark_sql_kwargs
+    )   #TODO: Fix sql cannot recognize .sql file
 
 
     cnt_tracks = SparkSqlOperator(
@@ -78,24 +85,25 @@ def daily_user_clickstream_etl():
         conf = "spark.hive.metastore.uris=thrift://hive-metastore:9083"
     )
 
-
     cnt_artists = SparkSqlOperator(
         task_id = "get_cnt_artists",
-        conn_id = "spark_default",
         sql = "SELECT COUNT(*) cnt FROM dim_artists LIMIT 1;",
-        master = "spark://spark-master:7077",
         name = "Get artists count",
-        conf = "spark.hive.metastore.uris=thrift://hive-metastore:9083"
+        **default_spark_sql_kwargs
     )
 
+    cnt_users = SparkSqlOperator(
+        task_id = "get_cnt_users",
+        sql = "SELECT COUNT(*) cnt FROM dim_users LIMIT 1;",
+        name = "Get users count",
+        **default_spark_sql_kwargs
+    )
 
     cnt_dates = SparkSqlOperator(
         task_id = "get_cnt_dates",
-        conn_id = "spark_default",
         sql = "SELECT COUNT(*) cnt FROM dim_dates LIMIT 1;",
-        master = "spark://spark-master:7077",
         name = "Get dates count",
-        conf = "spark.hive.metastore.uris=thrift://hive-metastore:9083"
+        **default_spark_sql_kwargs
     )
 
 
@@ -111,34 +119,31 @@ def daily_user_clickstream_etl():
     # Check if need to request new data or load more data to 
     # get enough dimension data
     @task.branch
-    def need_request_data_from_api(cnt_tracks, cnt_artists):
+    def need_request_api_data(cnt_tracks, cnt_artists):
         """Check if tables dim_tracks and dim_artists are empty.
         If any is empty, request new data and append new data only.
         """
-        input = [cnt_tracks, cnt_artists]
-        
-        if any([cnt == 0 for cnt in input]):
+        if cnt_tracks == 0 or cnt_artists == 0:
             return ["get_access_token"]
         else:
             return ["need_load_dim_data"]
-    branch_request_data = need_request_data_from_api(cnt_tracks, cnt_artists)
+    branch_request_data = need_request_api_data(cnt_tracks, cnt_artists)
     
 
     end_dag = EmptyOperator(task_id = "end_dag")
 
 
     @task.branch
-    def need_load_dim_data(cnt_dates):
+    def need_load_dim_data(cnt_users, cnt_dates):
         """Need to load data if any dimension table (tracks, artists, 
         dates, users) is empty. Only need to check cnt_dates because previous 
         branch checked cnt_tracks and cnt_artists already.
         """
-
-        if cnt_dates == 0:
+        if cnt_users == 0 or cnt_dates == 0:
             return ["load_dim_tbls"]
         else:
             return ["end_dag"]
-    branch_load_dim = need_load_dim_data(cnt_dates)
+    branch_load_dim = need_load_dim_data(cnt_users, cnt_dates)
         
 
     # Dependency specifications
@@ -150,8 +155,8 @@ def daily_user_clickstream_etl():
         >> Label("False (both tables are non-empty)") \
         >> branch_load_dim
     
-    hive_tbls >> [cnt_tracks, cnt_artists, cnt_dates]
-    cnt_dates >> branch_load_dim
+    hive_tbls >> [cnt_tracks, cnt_artists, cnt_users, cnt_dates]
+    [cnt_users, cnt_dates] >> branch_load_dim
     branch_load_dim \
         >> Label("True (at least 1 table is empty)") \
         >> load_dim_tbls

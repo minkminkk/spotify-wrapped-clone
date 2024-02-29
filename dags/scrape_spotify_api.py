@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Any
+from typing import List, Any
 import pendulum
 import logging
 
