@@ -1,18 +1,81 @@
 services:
+  postgres:
+    image: postgres:15.6-alpine3.18
+    restart: unless-stopped
+    hostname: postgres
+    container_name: postgres
+    environment:
+      POSTGRES_PASSWORD: postgres
+    healthcheck:
+      test: pg_isready -q -U postgres -d airflow_meta_db && pg_isready -q -U postgres -d hive_meta_db
+      interval: 10s
+      timeout: 10s
+      retries: 3
+    volumes:
+      - metastore_db:/var/lib/postgresql/data
+      - ./containers/postgres/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+
   airflow:
     build:
       context: ./containers/airflow
+    container_name: airflow
+    depends_on:
+      postgres:
+        condition: service_healthy
     env_file: ./containers/airflow/airflow.env
     volumes:
       - ./dags:/opt/airflow/dags
       - ./jobs:/jobs
       - ./packages:/packages
       - ./logs/airflow:/opt/airflow/logs
+      - ./containers/airflow/webserver_config.py:/opt/airflow/webserver_config.py
+        # for disabling authentication for faster iterations
     ports:
-      - "8080:8080"
+      - 8080:8080
+
+  hive-metastore:
+    image: apache/hive:3.1.3
+    hostname: hive-metastore
+    container_name: hive-metastore
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - HIVE_CUSTOM_CONF_DIR=/hive-custom-conf
+      - DB_DRIVER=postgres
+      - SERVICE_NAME=metastore
+      - IS_RESUME=true
+    volumes:
+      - ./containers/hive-metastore/hdfs-site.xml:/hive-custom-conf/hdfs-site.xml
+      - ./containers/hive-metastore/hive-site.xml:/hive-custom-conf/hive-site.xml
+      - ./containers/hive-metastore/postgresql-42.7.2.jar:/opt/hive/lib/postgres.jar
+
+  namenode:
+    image: apache/hadoop:3
+    hostname: namenode
+    container_name: namenode
+    command: ["hdfs", "namenode"]
+    ports:
+      - 9870:9870
+    env_file:
+      - ./containers/hdfs/hdfs.env
+    environment:
+      ENSURE_NAMENODE_DIR: "/tmp/hadoop-root/dfs/name"
+    volumes:
+      - namenode:/data
+  
+  datanode:
+    image: apache/hadoop:3
+    container_name: datanode
+    command: ["hdfs", "datanode"]
+    env_file:
+      - ./containers/hdfs/hdfs.env
+    volumes:
+      - datanode:/data
 
   spark-master:
     image: bitnami/spark:3.5
+    container_name: spark-master
     env_file: ./containers/spark/spark-master.env
     volumes:
       - ./containers/spark/spark-defaults.conf:/opt/bitnami/spark/conf/spark-defaults.conf
@@ -22,35 +85,13 @@ services:
 
   spark-worker:
     image: bitnami/spark:3.5
+    container_name: spark-worker
     env_file: ./containers/spark/spark-worker.env
     volumes:
       - ./containers/spark/spark-defaults.conf:/opt/bitnami/spark/conf/spark-defaults.conf
       - ./packages:/packages
 
+volumes:
+  metastore_db:
   namenode:
-    image: apache/hadoop:3
-    hostname: namenode
-    command: ["hdfs", "namenode"]
-    ports:
-      - 9870:9870
-    env_file:
-      - ./containers/hdfs/hdfs.env
-    environment:
-      ENSURE_NAMENODE_DIR: "/tmp/hadoop-root/dfs/name"
-  
   datanode:
-    image: apache/hadoop:3
-    command: ["hdfs", "datanode"]
-    env_file:
-      - ./containers/hdfs/hdfs.env
-
-  hive-metastore:
-    image: apache/hive:3.1.3
-    hostname: hive-metastore
-    depends_on:
-      - namenode
-    environment:
-      - HIVE_CUSTOM_CONF_DIR=/hive-custom-conf
-      - SERVICE_NAME=metastore
-    volumes:
-      - ./containers/hive-metastore:/hive-custom-conf

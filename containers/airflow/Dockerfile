@@ -18,15 +18,5 @@ USER ${AIRFLOW_UID}
 COPY ./requirements.txt /
 RUN pip install --no-cache-dir -r /requirements.txt
 
-# Migrate DB & create account
-RUN airflow db migrate \
-    && airflow users create \
-    --username admin \
-    --password admin \
-    --firstname Admin \
-    --lastname Admin \
-    --role Admin \
-    --email admin@localhost
-
 # Init webserver & scheduler
 ENTRYPOINT ["airflow", "standalone"]

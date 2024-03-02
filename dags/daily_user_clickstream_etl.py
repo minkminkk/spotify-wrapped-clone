@@ -19,8 +19,9 @@ from include.custom_hooks_operators.spark_submit \
         "email": ["airflow@example.com"],
         "email_on_failure": False,
         "email_on_retry": False,
-        "retries": 0
-    }
+        "retries": 0,
+    },
+    template_searchpath = "/opt/airflow/dags/include/sql"
 )
 def daily_user_clickstream_etl():
     @task
@@ -70,7 +71,7 @@ def daily_user_clickstream_etl():
 
     hive_tbls = SparkSqlOperator(
         task_id = "create_hive_tbls",
-        sql = "/opt/airflow/dags/include/spark_tbls_init.sql",
+        sql = "spark_tbls_init.sql",
         name = "Create Hive tables",
         **default_spark_sql_kwargs
     )   #TODO: Fix sql cannot recognize .sql file
