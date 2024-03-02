@@ -1,32 +1,10 @@
 <configuration>
 
-    <!-- Configs for creating & starting containers -->
-    <property>
-        <name>hive.server2.enable.doAs</name>
-        <value>false</value>
-    </property>
-
-    <property>
-        <name>hive.exec.scratchdir</name>
-        <value>/opt/hive/scratch_dir</value>
-    </property>
-
-    <property>
-        <name>hive.user.install.directory</name>
-        <value>/opt/hive/install_dir</value>
-    </property>
-
-    <property>
-        <name>hive.exec.submit.local.task.via.child</name>
-        <value>false</value>
-    </property>
-
     <property>
         <name>metastore.metastore.event.db.notification.api.auth</name>
         <value>false</value>
     </property>
 
-    <!-- Custom config -->
     <property>
         <name>hive.metastore.uris</name>
         <value>thrift://hive-metastore:9083</value>
@@ -70,6 +48,11 @@
     <property>
         <name>hive.exec.dynamic.partition.mode</name>
         <value>nonstrict</value>
+    </property>
+
+    <property>
+        <name>datanucleus_autoCreateAll</name>
+        <value>false</value>
     </property>
 
 </configuration>

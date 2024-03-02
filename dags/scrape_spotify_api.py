@@ -7,7 +7,7 @@ from airflow.models.taskinstance import TaskInstance
 from airflow.models import XCom
 from airflow.utils.db import provide_session
 from airflow.providers.mongo.hooks.mongo import MongoHook  
-from pymongo.errors import BulkWriteError      
+from pymongo.errors import BulkWriteError
 
 
 @dag(
