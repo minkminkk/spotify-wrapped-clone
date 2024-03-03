@@ -154,7 +154,7 @@ class APISession:
                         q_urls.put_nowait(next_url)
                     res[key].extend(r_json[key]["items"])
 
-            return res
+        return res
 
 
     def get_tracks(
