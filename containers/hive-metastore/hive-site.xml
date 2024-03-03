@@ -50,9 +50,4 @@
         <value>nonstrict</value>
     </property>
 
-    <property>
-        <name>datanucleus_autoCreateAll</name>
-        <value>false</value>
-    </property>
-
 </configuration>

@@ -28,7 +28,7 @@ def main(access_token: dict, genres: List[str]):
                         type = "track",
                         limit = 50,
                         offset = 0,
-                        recursive = True
+                        recursive = False
                     )["tracks"]
                 )
                 rdd_track_objs = rdd_track_objs.union(rdd_tmp)
@@ -83,7 +83,8 @@ def rdd_objs_to_df_tracks(rdd_objs: RDD) -> DataFrame:
         .select(
             *("track_id", "track_name", "track_duration_ms"),
             *("artist_ids", "album_name", "album_type", "album_release_date")
-        )
+        ) \
+        .drop_duplicates(subset = ["track_id"])
     
     return df_tracks
 
@@ -190,8 +191,7 @@ if __name__ == "__main__":
         required = True
     )
     parser.add_argument(
-        *("-g", "--genres"), 
-        nargs = "*",
+        *("-g", "--genres"),
         help = "Track genres to request to Spotify API",
         dest = "genres",
         required = True
@@ -199,6 +199,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     access_token = json.loads(args.access_token)
-    genres = args.genres
+    genres = args.genres.split(",")
 
     main(access_token, genres)

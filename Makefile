@@ -4,12 +4,7 @@ venv_dev:
 	pip install --no-cache-dir -r requirements-venv-dev.txt
 
 
-repo_dirs:
-	mkdir -p ./logs/airflow \
-		& sudo chmod 777 -R ./logs
-
-
-up: repo_dirs
+up:
 	docker compose up -d
 down:
 	docker compose down
