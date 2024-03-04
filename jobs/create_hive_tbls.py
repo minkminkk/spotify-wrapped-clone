@@ -1,8 +1,4 @@
-from typing import TYPE_CHECKING
 from pyspark.sql import SparkSession
-
-if TYPE_CHECKING:
-    from pyspark.sql import DataFrame
 
 
 def main():
@@ -19,7 +15,7 @@ def main():
             track_id            CHAR(22),
             track_name          VARCHAR(120),
             track_duration_ms   INTEGER,
-            artist_ids          ARRAY<BIGINT>,
+            artist_dim_ids      ARRAY<BIGINT>,
             album_name          VARCHAR(120),
             album_type          VARCHAR(11),
             album_release_date  DATE
@@ -56,16 +52,13 @@ def main():
         ) USING parquet;
     """
     q_events = """
-        CREATE TABLE IF NOT EXISTS fct_user_events (
-            event_id        CHAR(64),
-            event_ts        TIMESTAMP,
-            event_name      VARCHAR(4),
-            user_dim_id     BIGINT,
-            ipv4            VARCHAR(15),
-            user_agent      VARCHAR(250),
-            track_dim_id    BIGINT,
-            date_dim_id     INT
-        ) USING parquet PARTITIONED BY (date_dim_id);
+        CREATE TABLE IF NOT EXISTS fct_trackplays (
+            start_date_dim_id   CHAR(64),
+            user_dim_id         BIGINT,
+            track_dim_id        BIGINT,
+            artist_dim_id       BIGINT,
+            play_duration_ms    INTEGER
+        ) USING parquet PARTITIONED BY (start_date_dim_id);
     """
 
     for q in (q_tracks, q_artists, q_users, q_dates, q_events):

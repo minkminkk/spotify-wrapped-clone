@@ -43,6 +43,10 @@ def daily_user_clickstream_etl():
         spark = SparkSession.builder \
             .master("spark://spark-master:7077") \
             .appName("Check for empty dimension tables") \
+            .config(
+                "spark.hive.metastore.uris", 
+                "thrift://hive-metastore:9083"
+            ) \
             .enableHiveSupport() \
             .getOrCreate()
         
