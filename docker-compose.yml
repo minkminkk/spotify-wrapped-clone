@@ -42,6 +42,7 @@ services:
       - 9870:9870
     volumes:
       - namenode:/hadoop/dfs/name
+      - ./data:/data
     env_file:
       - ./containers/hadoop/hadoop.env
     environment:
@@ -78,8 +79,9 @@ services:
 
   # Spark: https://hub.docker.com/r/bitnami/spark/
   spark-master:
-    image: bitnami/spark:3.5
+    image: bitnami/spark:3.5.1
     container_name: spark-master
+    hostname: spark-master
     env_file: ./containers/spark/spark-master.env
     volumes:
       - ./containers/spark/spark-defaults.conf:/opt/bitnami/spark/conf/spark-defaults.conf
@@ -88,7 +90,7 @@ services:
       - 8081:8080
 
   spark-worker:
-    image: bitnami/spark:3.5
+    image: bitnami/spark:3.5.1
     container_name: spark-worker
     env_file: ./containers/spark/spark-worker.env
     volumes:
