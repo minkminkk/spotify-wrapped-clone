@@ -1,146 +1,41 @@
-from typing import List
-from pyspark.sql import SparkSession
-from spotify_api_client.session import APISession
 from faker import Faker
+from faker.providers import profile
 from faker_custom_providers import user_info
 
-from pyspark import RDD
+from pyspark.sql import SparkSession
 from pyspark.sql import DataFrame, Window, functions as F
+from pyspark.storagelevel import StorageLevel
 
 
-def main(access_token: dict, genres: List[str]):
+def main():
     # Create SparkSession with Hive support
     spark = SparkSession.builder.enableHiveSupport().getOrCreate()
-    sc = spark.sparkContext
+
+    # Read source data into DataFrame and rename columns
+    df = spark.read.parquet("/data_lake/spotify-tracks.parquet")
+    df = df.withColumnRenamed(df.columns[0], "id")
     
-    # Request data from API - only when respective tables are empty
-    tracks_empty = spark.table("dim_tracks").isEmpty()
-    artists_empty = spark.table("dim_tracks").isEmpty()
-    
-    if tracks_empty or artists_empty:
-        with APISession(access_token) as client_session:
-            rdd_track_objs = sc.emptyRDD()
+    # Process into dimension tables
+    df_tracks = get_df_tracks(df)
+    df_users = generate_df_users(no_users = 10000)
+    df_dates = generate_df_dates("2018-01-01", "2028-01-01")
 
-            for g in genres:
-                rdd_tmp = sc.parallelize(
-                    client_session.search_items(
-                        q = "genres:" + g,
-                        type = "track",
-                        limit = 50,
-                        offset = 0,
-                        recursive = False
-                    )["tracks"]
-                )
-                rdd_track_objs = rdd_track_objs.union(rdd_tmp)
-
-        # Cache for later usage
-        rdd_track_objs.cache()
-
-        # Process and write data
-        if artists_empty:
-            df_artists = rdd_objs_to_df_artists(rdd_track_objs)
-            df_artists.write.insertInto("dim_artists")
-        else:
-            df_artists = spark.table("dim_artists")
-        
-        if tracks_empty:
-            df_tracks = rdd_objs_to_df_tracks(rdd_track_objs)
-            df_tracks = df_tracks \
-                .withColumn("artist_id", F.explode("artist_ids")) \
-                .drop("artist_ids") # explode artist_ids -> artist_id
-            df_tracks = df_tracks \
-                .join(
-                    df_artists.select("artist_dim_id", "artist_id"), 
-                    how = "left", 
-                    on = df_tracks["artist_id"] == df_artists["artist_id"]
-                ) \
-                .drop("artist_id")  # join to map artist_id with artist_dim_id
-            df_tracks = df_tracks \
-                .groupBy("track_dim_id") \
-                .agg(F.collect_set("artist_dim_id").alias("artist_dim_ids"))
-            df_tracks.write.insertInto("dim_tracks")
-
-        # Unpersist previously cached data
-        rdd_track_objs.unpersist()
-
-    # Generate fake users and dates
-    # Simple logic to avoid appending duplicated generated data
-    # If some of the rows are deleted manually, this logic would not be able
-    # to detect if rows are fully loaded
-    if spark.table("dim_users").isEmpty():
-        df_users = generate_df_users(no_users = 10000)
-        df_users.write.insertInto("dim_users")
-    if spark.table("dim_dates").isEmpty():
-        df_dates = generate_df_dates("2018-01-01", "2028-01-01")
-        df_dates.write.insertInto("dim_dates")
+    # Write into Hive dimension tables
+    df_tracks.write.insertInto("dim_tracks")
+    df_users.write.insertInto("dim_users")
+    df_dates.write.insertInto("dim_dates")
 
 
-def rdd_objs_to_df_tracks(rdd_objs: RDD) -> DataFrame:
-    """Convert response track objects into track DataFrame with artist_id
-    source key. Need furthur mapping to DWH surrogate keys.
+def get_df_tracks(df: DataFrame) -> DataFrame:
+    """Drop source track_id for consistency with other DataFrames.
+    Get dimension ID based on row ID.
+    Convert artist strings into arrays.
     """
-    spark = SparkSession.getActiveSession()
-
-    # Parse fields in each object
-    rdd_tracks = rdd_objs.map(
-            lambda obj: {
-                "track_id": obj["id"],
-                "track_name": obj["name"],
-                "track_duration_ms": obj["duration_ms"],
-                "artist_id": [a["id"] for a in obj["artists"]],
-                "album_name": obj["album"]["name"],
-                "album_type": obj["album"]["album_type"],
-                "album_release_date": obj["album"]["release_date"]
-            }
-        )
-    
-    # Create DataFrame and rearrange columns
-    w = Window.orderBy("track_name")
-    df_tracks = spark \
-        .createDataFrame(rdd_tracks) \
-        .drop_duplicates(subset = ["track_id"]) \
-        .withColumn("track_dim_id", F.row_number().over(w)) \
-        .select(
-            *("track_dim_id", "track_id", "track_name", "track_duration_ms"),
-            *("artist_ids", "album_name", "album_type", "album_release_date")
-        )
-    
-    return df_tracks
-
-
-def rdd_objs_to_df_artists(rdd_objs: RDD) -> DataFrame:
-    """Convert response track objects to artist DataFrame"""
-    spark = SparkSession.getActiveSession()
-    
-    # Predefine some lambda functions for readability
-    artist_record = lambda a: {"artist_id": a["id"], "artist_name": a["name"]}
-    add = lambda l1, l2: l1 + l2
-
-    # Parse artist info in track albums
-    rdd_album_artists = rdd_objs.map(
-        lambda obj: [artist_record(a) for a in obj["album"]["artists"]]
-    )
-    
-    # Parse artist info in track artists
-    rdd_track_artists = rdd_objs.map(
-        lambda obj: [artist_record(a) for a in obj["artists"]]
-    ) 
-
-    # Reduce artist info lists and redistribute into rdd
-    rdd_artists = spark.sparkContext.parallelize(
-        rdd_album_artists.union(rdd_track_artists).reduce(add)
-    )
-    
-    # Create DataFrame, rearrange columns
-    # Remove duplicates because artists-tracks has M:M relationship
-    w = Window.orderBy("artist_name")
-    df_artists = spark \
-        .createDataFrame(rdd_artists) \
-        .drop_duplicates(subset = ["artist_id"]) \
-        .withColumn("artist_dim_id", F.row_number().over(w)) \
-        .select("artist_dim_id", "artist_id", "artist_name")
-    
-    return df_artists
+    return df \
+        .drop("track_id") \
+        .withColumn("id", df["id"] + 1) \
+        .withColumnRenamed("id", "track_dim_id") \
+        .withColumn("artists", F.split("artists", ";"))
 
 
 def generate_df_users(no_users: int) -> DataFrame:
@@ -148,21 +43,27 @@ def generate_df_users(no_users: int) -> DataFrame:
     spark = SparkSession.getActiveSession()
 
     fake = Faker()
-    fake.add_provider(user_info.Provider)
+    fake.add_provider(profile.Provider)
 
     # Generate dim_id serial column using Window and F.row_number()
     w = Window.orderBy("name")
     df_users = spark \
         .createDataFrame(
             spark.sparkContext.parallelize(
-                [fake.user_profile() for _ in range(no_users)]
+                [fake.simple_profile() for _ in range(no_users)]
             )
         ) \
         .drop_duplicates(subset = ["user_id"]) \
         .withColumn("user_dim_id", F.row_number().over(w)) \
+        .withColumnsRenamed(
+            {
+                "mail": "email",
+                "birthdate": "birth_date"
+            }
+        ) \
         .select(
-            *("user_dim_id", "user_id", "username", "name"),
-            *("sex", "address", "mail", "birthdate")
+            *("user_dim_id", "username", "name"),
+            *("sex", "address", "email", "birth_date")
         )
         
     return df_users
@@ -204,25 +105,4 @@ def generate_df_dates(start_date: str, end_date: str) -> DataFrame:
 
 
 if __name__ == "__main__":
-    import argparse
-    import json
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        *("-t", "--token"), 
-        help = "Spotify client access token, as json string",
-        dest = "access_token",
-        required = True
-    )
-    parser.add_argument(
-        *("-g", "--genres"),
-        help = "Track genres to request to Spotify API",
-        dest = "genres",
-        required = True
-    )
-    args = parser.parse_args()
-
-    access_token = json.loads(args.access_token)
-    genres = args.genres.split(",")
-
-    main(access_token, genres)
+    main()
