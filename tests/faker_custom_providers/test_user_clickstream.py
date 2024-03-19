@@ -19,15 +19,29 @@ def test_dates():   # start_dt, end_dt
     return datetime(2018, 1, 1, 1), datetime(2018, 1, 1, 5)
 
 
-def test_tracklist_for_user(fake):
+@pytest.mark.parametrize(
+    "min_tracks,max_tracks,expected",
+    [(0, 0, 0), (2, 2, 2)]
+)
+def test_tracklist_for_user(fake, min_tracks, max_tracks, expected):
     # Check when min_tracks > max_tracks
     with pytest.raises(ValueError):
         fake.tracklist_for_user(3, 2)
 
     # Check when min_tracks == max_tracks
-    assert len(fake.tracklist_for_user(min_tracks = 0,  max_tracks = 0)) == 0
-    assert len(fake.tracklist_for_user(min_tracks = 2, max_tracks = 2)) == 2
+    assert len(fake.tracklist_for_user(min_tracks,  max_tracks)) == expected
     
+
+@pytest.mark.parametrize(
+    "min_tracks,max_tracks",
+    [(5, 3), (-5, 0), (-5, 2), (-5, -2)]
+)
+def test_tracklist_for_user_invalid_minmax(fake, min_tracks, max_tracks):
+    with pytest.raises(ValueError):
+        fake.tracklist_for_user(min_tracks, max_tracks)
+
+
+def test_tracklist_for_user_w_track_sample(fake):
     # Check no duplicate tracks in resulting tracklist
     sample_track_ids = ["track" + str(n) for n in range(20)] # length 20
     track_sample = fake.tracklist_for_user(
@@ -47,18 +61,6 @@ def test_tracklist_for_user(fake):
 
 
 def test_events_from_one_user(fake):
-    # Check cases of invalid input
-    invalid_cases = [
-        ("2018-01-01", "2018-01-02 00:00:00"),  # Invalid dt string format
-        ("2018-13-01 00:00:00", "2018-13-02 00:00:00"), # invalid month field
-        ("2018-01-31 00:00:00", "2018-01-32 00:00:00"), # invalid day field
-        (datetime(2018, 1, 29), datetime(2018, 1, 28))  # start_dt > end_dt
-    ]
-    for sdt, edt in invalid_cases:
-        with pytest.raises(ValueError):
-            for _ in fake.events_from_one_user(sdt, edt, "_", 1):
-                break
-    
     # Every arg is specified
     kwargs = {
         "start_dt": datetime(2018, 1, 1, 1),
@@ -95,6 +97,21 @@ def test_events_from_one_user(fake):
             and len(event["track_id"]) == 22    # 22 hexdigits
 
         cur_event_name = "stop" if cur_event_name == "play" else "play"
+
+
+@pytest.mark.parametrize(
+    "start_dt,end_dt",
+    [
+        ("2018-01-01", "2018-01-02 00:00:00"),  # Invalid dt string format
+        ("2018-13-01 00:00:00", "2018-13-02 00:00:00"), # invalid month field
+        ("2018-01-31 00:00:00", "2018-01-32 00:00:00"), # invalid day field
+        (datetime(2018, 1, 29), datetime(2018, 1, 28))  # start_dt > end_dt
+    ]
+)
+def test_events_from_one_user_invalid_dt(fake, start_dt, end_dt):
+    with pytest.raises(ValueError):
+        for _ in fake.events_from_one_user(start_dt, end_dt, "_", 1):
+            break
 
 
 def test_events_from_multiple_users(fake):

@@ -53,8 +53,10 @@ class ClickstreamProvider(*providers):
         :return: list of track_id
         """
 
-        if min_tracks > max_tracks:
-            raise ValueError("min_tracks must be smaller or equal to max_tracks")
+        if min_tracks > max_tracks or min_tracks < 0:
+            raise ValueError("Invalid min_tracks and/or max_tracks")
+        elif sample_track_ids and min_tracks > len(sample_track_ids):
+            raise ValueError("min_tracks must <= number of sample tracks")
 
         if sample_track_ids:    # if have sample data then take from sample
             # Avoid taking sample larger than population

@@ -1,5 +1,5 @@
 from faker import Faker
-from faker.providers import profile
+from faker_custom_providers import user_info
 
 from pyspark.sql import SparkSession, DataFrame, Window, functions as F
 from pyspark.sql.types import LongType
@@ -30,6 +30,7 @@ def get_df_tracks(df: DataFrame) -> DataFrame:
     """
     cols = (
         "track_dim_id",
+        "track_id",
         "track_name",
         "artists",
         "album_name",
@@ -38,7 +39,6 @@ def get_df_tracks(df: DataFrame) -> DataFrame:
     )
 
     return df \
-        .drop("track_id") \
         .withColumn("id", df["id"] + 1) \
         .withColumnRenamed("id", "track_dim_id") \
         .withColumn("artists", F.split("artists", ";")) \
@@ -50,14 +50,14 @@ def generate_df_users(no_users: int) -> DataFrame:
     spark = SparkSession.getActiveSession()
 
     fake = Faker()
-    fake.add_provider(profile.Provider)
+    fake.add_provider(user_info.Provider)
 
     # Generate dim_id serial column using Window and F.row_number()
     w = Window.orderBy("name")
     df_users = spark \
         .createDataFrame(
             spark.sparkContext.parallelize(
-                [fake.simple_profile() for _ in range(no_users)]
+                [fake.user_profile() for _ in range(no_users)]
             )
         ) \
         .withColumn("user_dim_id", F.row_number().over(w).cast(LongType())) \
@@ -68,7 +68,7 @@ def generate_df_users(no_users: int) -> DataFrame:
             }
         ) \
         .select(
-            *("user_dim_id", "username", "name"),
+            *("user_dim_id", "user_id", "username", "name"),
             *("sex", "address", "email", "birth_date")
         )
         

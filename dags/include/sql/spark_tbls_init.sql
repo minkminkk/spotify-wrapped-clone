@@ -1,31 +1,22 @@
 CREATE TABLE IF NOT EXISTS dim_tracks (
     track_dim_id        BIGINT,
-    track_id            CHAR(22),
-    track_name          VARCHAR(120),
-    track_duration_ms   INTEGER,
-    artist_ids          ARRAY<BIGINT>,
-    album_name          VARCHAR(120),
-    album_type          VARCHAR(11),
-    album_release_date  DATE
-) USING parquet;
-
-
-CREATE TABLE IF NOT EXISTS dim_artists (
-    artist_dim_id   BIGINT,
-    artist_id       CHAR(22),
-    artist_name     VARCHAR(120)
+    track_name          VARCHAR,
+    artists             ARRAY<VARCHAR>,
+    album_name          VARCHAR,
+    track_genre         VARCHAR
+    duration_ms         INTEGER
 ) USING parquet;
 
 
 CREATE TABLE IF NOT EXISTS dim_users (
     user_dim_id     BIGINT,
     user_id         CHAR(22),
-    username        VARCHAR(64),
-    name            VARCHAR(120),
+    username        VARCHAR,
+    name            VARCHAR,
     sex             CHAR(1),
-    address         VARCHAR(250),
-    mail            VARCHAR(80),
-    birthdate       DATE
+    address         VARCHAR,
+    email           VARCHAR,
+    birth_date      DATE
 ) USING parquet;
 
 
@@ -50,3 +41,11 @@ CREATE TABLE IF NOT EXISTS fct_user_events (
     track_dim_id    BIGINT,
     date_dim_id     INT
 ) USING parquet PARTITIONED BY (date_dim_id);
+
+
+CREATE TABLE IF NOT EXISTS fct_trackplays (
+    start_date_dim_id   CHAR(64),
+    user_dim_id         BIGINT,
+    track_dim_id        BIGINT,
+    play_duration_ms    INTEGER
+) USING parquet PARTITIONED BY (start_date_dim_id);
