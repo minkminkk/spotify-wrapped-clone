@@ -12,7 +12,7 @@ def main():
     q_tracks = """
         CREATE TABLE IF NOT EXISTS dim_tracks (
             track_dim_id        BIGINT,
-            artists             ARRAY<VARCHAR(120)>,
+            artists             ARRAY<VARCHAR>,
             album_name          VARCHAR,
             track_name          VARCHAR,
             popularity          TINYINT,
