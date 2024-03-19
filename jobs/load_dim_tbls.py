@@ -1,10 +1,8 @@
 from faker import Faker
 from faker.providers import profile
-from faker_custom_providers import user_info
 
-from pyspark.sql import SparkSession
-from pyspark.sql import DataFrame, Window, functions as F
-from pyspark.storagelevel import StorageLevel
+from pyspark.sql import SparkSession, DataFrame, Window, functions as F
+from pyspark.sql.types import LongType
 
 
 def main():
@@ -53,8 +51,7 @@ def generate_df_users(no_users: int) -> DataFrame:
                 [fake.simple_profile() for _ in range(no_users)]
             )
         ) \
-        .drop_duplicates(subset = ["user_id"]) \
-        .withColumn("user_dim_id", F.row_number().over(w)) \
+        .withColumn("user_dim_id", F.row_number().over(w).cast(LongType())) \
         .withColumnsRenamed(
             {
                 "mail": "email",
@@ -70,7 +67,7 @@ def generate_df_users(no_users: int) -> DataFrame:
 
 
 def generate_df_dates(start_date: str, end_date: str) -> DataFrame:
-    """Populate calendar date from start_date to end_date"""
+    """Populate calendar date from start_date to end_date (inclusive)"""
     spark = SparkSession.getActiveSession()
 
     # Reference
