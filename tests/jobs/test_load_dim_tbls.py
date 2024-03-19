@@ -16,7 +16,11 @@ def spark():
     yield spark
 
 
-def test_get_df_users(spark):
+def test_get_df_tracks(spark):
+    pass
+
+
+def test_generate_df_users(spark):
     df = generate_df_users(no_users = 10)
 
     # Test output DataFrame schema
@@ -51,6 +55,17 @@ def test_get_df_dates(spark):
         }
 
     df = generate_df_dates(start_date.isoformat(), end_date.isoformat())
+    schema = StructType(
+        [
+            StructField("date_dim_id", IntegerType()),
+            StructField("full_date", DateType()),
+            StructField("year", IntegerType()),
+            StructField("month", IntegerType()),
+            StructField("day", IntegerType()),
+            StructField("week_of_year", IntegerType()),
+            StructField("day_of_week", IntegerType()),
+        ]
+    )   # By default, Python int -> LongType while Spark SQL use IntegerType 
 
     # Test output DataFrame
     expected_df = spark.createDataFrame(
@@ -58,18 +73,7 @@ def test_get_df_dates(spark):
             dt_to_date_dict(start_date + timedelta(days = days)) \
                 for days in range(num_days + 1) # end_date inclusive
         ],
-        schema = StructType(
-            [
-                StructField("date_dim_id", IntegerType()),
-                StructField("full_date", DateType()),
-                StructField("year", IntegerType()),
-                StructField("month", IntegerType()),
-                StructField("day", IntegerType()),
-                StructField("week_of_year", IntegerType()),
-                StructField("day_of_week", IntegerType()),
-            ]
-        )   # By default, Python int -> Spark LongType
-            # while Spark SQL use IntegerType by default
+        schema = schema
     )
 
     assertDataFrameEqual(df, expected_df)

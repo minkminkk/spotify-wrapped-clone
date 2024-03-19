@@ -12,7 +12,7 @@ def main():
     # Read source data into DataFrame and rename columns
     df = spark.read.parquet("/data_lake/spotify-tracks.parquet")
     df = df.withColumnRenamed(df.columns[0], "id")
-    
+
     # Process into dimension tables
     df_tracks = get_df_tracks(df)
     df_users = generate_df_users(no_users = 10000)
@@ -26,14 +26,23 @@ def main():
 
 def get_df_tracks(df: DataFrame) -> DataFrame:
     """Drop source track_id for consistency with other DataFrames.
-    Get dimension ID based on row ID.
-    Convert artist strings into arrays.
+    Get dimension ID based on row ID. Convert artist strings into arrays.
     """
+    cols = (
+        "track_dim_id",
+        "track_name",
+        "artists",
+        "album_name",
+        "track_genre"
+        "duration_ms",
+    )
+
     return df \
         .drop("track_id") \
         .withColumn("id", df["id"] + 1) \
         .withColumnRenamed("id", "track_dim_id") \
-        .withColumn("artists", F.split("artists", ";"))
+        .withColumn("artists", F.split("artists", ";")) \
+        .select(*cols)
 
 
 def generate_df_users(no_users: int) -> DataFrame:

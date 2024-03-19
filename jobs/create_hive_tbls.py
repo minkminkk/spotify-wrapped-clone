@@ -12,25 +12,11 @@ def main():
     q_tracks = """
         CREATE TABLE IF NOT EXISTS dim_tracks (
             track_dim_id        BIGINT,
+            track_name          VARCHAR,
             artists             ARRAY<VARCHAR>,
             album_name          VARCHAR,
-            track_name          VARCHAR,
-            popularity          TINYINT,
-            duration_ms         INTEGER,
-            explicit            BOOLEAN,
-            danceability        FLOAT,
-            energy              FLOAT,
-            key                 TINYINT,
-            loudness            FLOAT,
-            mode                TINYINT,
-            speechiness         FLOAT,
-            acousticness        FLOAT,
-            instrumentalness    FLOAT,
-            liveness            FLOAT,
-            valence             FLOAT,
-            tempo               FLOAT,
-            time_signature      TINYINT,
             track_genre         VARCHAR
+            duration_ms         INTEGER
         ) USING parquet;
     """
     q_users = """
