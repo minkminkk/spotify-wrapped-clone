@@ -1,7 +1,9 @@
 import pytest
-from pyspark.sql import SparkSession
+
+from pyspark.sql import SparkSession, functions as F
 from pyspark.sql.types import *
 from pyspark.testing import assertDataFrameEqual
+
 from load_dim_tbls import get_df_tracks, generate_df_users, generate_df_dates
 from datetime import date, timedelta
 
@@ -25,16 +27,17 @@ def test_generate_df_users(spark):
 
     # Test output DataFrame schema
     expected_cols = (
-        *("user_dim_id", "username", "name"), 
+        *("user_dim_id", "user_id", "username", "name"), 
         *("sex", "address", "email", "birth_date")
     )
     assert set(df.columns) == set(expected_cols)
 
-    # Assert id column, other columns are specified by Faker std provider
+    # Assert columns in DataFrame
     assertDataFrameEqual(
         df.select("user_dim_id"),
         spark.range(1, df.count() + 1).withColumnRenamed("id", "user_dim_id")
-    )
+    )   # only need to test user_dim_id values because other fields
+        # are included as part of faker_custom_providers package
 
 
 def test_get_df_dates(spark):

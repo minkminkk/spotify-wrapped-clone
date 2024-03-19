@@ -15,14 +15,17 @@ def fake():
 
 
 def assert_entity_id(id):
+    # entity_id must be 22 hexadecimal chars
     assert all([c in string.hexdigits for c in id])
 
 
 def test_user_id(fake):
-    user_id = fake.user_id()
-    assert_entity_id(user_id)
+    for _ in range(10): # avoid false positive tests
+        user_id = fake.user_id()
+        assert_entity_id(user_id)
 
 
 def test_track_id(fake):
-    track_id = fake.track_id()
-    assert_entity_id(track_id)
+    for _ in range(10): # avoid false positive tests
+        track_id = fake.track_id()
+        assert_entity_id(track_id)
