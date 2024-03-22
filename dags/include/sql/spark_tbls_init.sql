@@ -1,33 +1,30 @@
-DROP TABLE IF EXISTS dim_tracks;
-DROP TABLE IF EXISTS dim_users;
-DROP TABLE IF EXISTS dim_dates;
-DROP TABLE IF EXISTS fct_user_events;
-DROP TABLE IF EXISTS fct_trackplays;
+DROP DATABASE IF EXISTS dwh CASCADE;
+CREATE DATABASE IF NOT EXISTS dwh;
 
 
-CREATE TABLE IF NOT EXISTS dim_tracks (
+CREATE TABLE IF NOT EXISTS dwh.dim_tracks (
     track_dim_id        BIGINT,
-    track_name          VARCHAR,
-    artists             ARRAY<VARCHAR>,
-    album_name          VARCHAR,
-    track_genre         VARCHAR
+    track_name          STRING,
+    artists             ARRAY<STRING>,
+    album_name          STRING,
+    track_genre         STRING,
     duration_ms         INTEGER
 ) USING parquet;
 
 
-CREATE TABLE IF NOT EXISTS dim_users (
+CREATE TABLE IF NOT EXISTS dwh.dim_users (
     user_dim_id     BIGINT,
     user_id         CHAR(22),
-    username        VARCHAR,
-    name            VARCHAR,
+    username        STRING,
+    name            STRING,
     sex             CHAR(1),
-    address         VARCHAR,
-    email           VARCHAR,
+    address         STRING,
+    email           STRING,
     birth_date      DATE
 ) USING parquet;
 
 
-CREATE TABLE IF NOT EXISTS dim_dates (
+CREATE TABLE IF NOT EXISTS dwh.dim_dates (
     date_dim_id     INTEGER,
     full_date       DATE,
     year            SMALLINT,
@@ -38,7 +35,7 @@ CREATE TABLE IF NOT EXISTS dim_dates (
 ) USING parquet;
 
 
-CREATE TABLE IF NOT EXISTS fct_user_events (
+CREATE TABLE IF NOT EXISTS dwh.fct_user_events (
     event_id        CHAR(64),
     event_ts        TIMESTAMP,
     event_name      VARCHAR(4),
@@ -50,7 +47,7 @@ CREATE TABLE IF NOT EXISTS fct_user_events (
 ) USING parquet PARTITIONED BY (date_dim_id);
 
 
-CREATE TABLE IF NOT EXISTS fct_trackplays (
+CREATE TABLE IF NOT EXISTS dwh.fct_trackplays (
     start_date_dim_id   CHAR(64),
     user_dim_id         BIGINT,
     track_dim_id        BIGINT,

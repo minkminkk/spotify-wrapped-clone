@@ -1,6 +1,7 @@
 from airflow.decorators import dag
 from airflow.providers.apache.spark.operators.spark_sql import SparkSqlOperator
 from include.custom_spark.spark_submit import CustomSparkSubmitOperator
+from os import path
 
 
 @dag(
@@ -14,29 +15,32 @@ from include.custom_spark.spark_submit import CustomSparkSubmitOperator
         "email_on_retry": False,
         "retries": 0,
     },
-    template_searchpath = "/opt/airflow/dags/include/sql"
+    template_searchpath = path.join(
+        path.dirname(__file__), "include"
+    )
 )
 def daily_user_clickstream_etl():
     # Create Hive tables
     hive_tbls = SparkSqlOperator(
         task_id = "create_hive_tbls",
         conn_id = "spark_default",
-        master = "spark://spark-master:7077",
+        # master = "spark://spark-master:7077",
         name = "Create Hive tables",
-        conf = "spark.hive.metastore.uris=thrift://hive-metastore:9083",
+        # conf = "spark.hive.metastore.uris=thrift://hive-metastore:9083",
         verbose = False,    # True by default
-        sql = "spark_tbls_init.sql"
+        sql = "sql/spark_tbls_init.sql"
     )
 
 
     # Initial loading Spark job
-    initial_loading = CustomSparkSubmitOperator(
-        task_id = "initial_loading", 
-        conn_id = "spark_default"
+    load_dimension_data = CustomSparkSubmitOperator(
+        task_id = "load_dimension_data", 
+        conn_id = "spark_default",
+        name = "Load dimension data"
     )
 
 
-    hive_tbls >> initial_loading
+    hive_tbls >> load_dimension_data
 
 
 run = daily_user_clickstream_etl()
