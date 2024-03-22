@@ -1,3 +1,10 @@
+DROP TABLE IF EXISTS dim_tracks;
+DROP TABLE IF EXISTS dim_users;
+DROP TABLE IF EXISTS dim_dates;
+DROP TABLE IF EXISTS fct_user_events;
+DROP TABLE IF EXISTS fct_trackplays;
+
+
 CREATE TABLE IF NOT EXISTS dim_tracks (
     track_dim_id        BIGINT,
     track_name          VARCHAR,

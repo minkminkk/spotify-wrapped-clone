@@ -14,7 +14,7 @@ class CustomSparkSubmitHook(SparkSubmitHook):
         conn_data = super()._resolve_connection()
         
         # Work-around incorrect parsing for SparkSubmitHook
-        if conn_data["master"] != "yarn":
+        if conn_data["master"] not in ("yarn", "local"):
             conn_data["master"] = "spark://" + conn_data["master"]
 
         return conn_data 

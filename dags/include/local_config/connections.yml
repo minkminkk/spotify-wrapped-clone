@@ -7,6 +7,4 @@ mongo_default:
     srv: true
 
 spark_default:
-  conn_type: spark
-  host: spark-master
-  port: 7077
+  host: local
