@@ -1,7 +1,6 @@
 import pytest
 from faker import Faker
-from faker_custom_providers import spotify, user_info, user_clickstream
-import string
+from packages.faker_custom_providers import spotify, user_info, user_clickstream
 
 
 @pytest.fixture(scope = "module")

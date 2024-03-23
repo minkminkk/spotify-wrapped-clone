@@ -3,7 +3,7 @@ from queue import Queue
 from collections import defaultdict
 import logging
 import requests
-from spotify_api_client.checks import check_response_json
+from packages.spotify_api_client.checks import check_response_json
 
 
 class APISession:

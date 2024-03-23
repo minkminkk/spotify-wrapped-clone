@@ -4,7 +4,7 @@ from pyspark.sql import SparkSession, functions as F
 from pyspark.sql.types import *
 from pyspark.testing import assertDataFrameEqual
 
-from load_dim_tbls import get_df_tracks, generate_df_users, generate_df_dates
+from jobs.load_dim_tbls import get_df_tracks, generate_df_users, generate_df_dates
 from datetime import date, timedelta
 
 
@@ -80,4 +80,3 @@ def test_get_df_dates(spark):
     )
 
     assertDataFrameEqual(df, expected_df)
-    

@@ -1,5 +1,5 @@
 from faker import Faker
-from faker_custom_providers import user_info
+from packages.faker_custom_providers import user_info
 
 from pyspark.sql import SparkSession, DataFrame, Window, functions as F
 from pyspark.sql.types import LongType
@@ -10,7 +10,7 @@ def main():
     spark = SparkSession.builder.enableHiveSupport().getOrCreate()
 
     # Read source data into DataFrame and rename columns
-    df = spark.read.parquet("/data_lake/spotify-tracks.parquet")
+    df = spark.read.parquet("./data/spotify-tracks.parquet")
     df = df.withColumnRenamed(df.columns[0], "id")
 
     # Process into dimension tables
@@ -19,9 +19,9 @@ def main():
     df_dates = generate_df_dates("2018-01-01", "2028-01-01")
 
     # Write into Hive dimension tables
-    df_tracks.write.insertInto("dim_tracks")
-    df_users.write.insertInto("dim_users")
-    df_dates.write.insertInto("dim_dates")
+    df_tracks.write.insertInto("dwh.dim_tracks")
+    df_users.write.insertInto("dwh.dim_users")
+    df_dates.write.insertInto("dwh.dim_dates")
 
 
 def get_df_tracks(df: DataFrame) -> DataFrame:
@@ -34,8 +34,8 @@ def get_df_tracks(df: DataFrame) -> DataFrame:
         "track_name",
         "artists",
         "album_name",
-        "track_genre"
-        "duration_ms",
+        "track_genre",
+        "duration_ms"
     )
 
     return df \

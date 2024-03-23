@@ -4,6 +4,7 @@ CREATE DATABASE IF NOT EXISTS dwh;
 
 CREATE TABLE IF NOT EXISTS dwh.dim_tracks (
     track_dim_id        BIGINT,
+    track_id            CHAR(22),
     track_name          STRING,
     artists             ARRAY<STRING>,
     album_name          STRING,

@@ -15,7 +15,7 @@ dependencies = [
 dev = ["pytest==8.0.1", "mypy==1.8.0", "mypy-extensions==1.0.0", "black"]
 
 [tool.pytest.ini_options]
-pythonpath = "dags jobs packages"
+pythonpath = "src/dags src"
 testpaths = "tests"
 addopts = "-ra -q -p no:cacheprovider"
 

@@ -1,5 +1,5 @@
 import pytest
-from os.path import join, dirname, abspath
+from os.path import join, dirname
 
 from airflow.models import DagBag
 
@@ -7,7 +7,8 @@ from airflow.models import DagBag
 @pytest.fixture(scope = "package")
 def dagbag():
     path = join(
-        dirname(dirname(dirname(abspath(__file__)))), 
+        dirname(dirname(dirname(__file__))), 
+        "src",
         "dags"
     )
     return DagBag(dag_folder = path, include_examples = False)

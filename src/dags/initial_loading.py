@@ -36,6 +36,10 @@ def daily_user_clickstream_etl():
     load_dimension_data = CustomSparkSubmitOperator(
         task_id = "load_dimension_data", 
         conn_id = "spark_default",
+        application = path.join(
+            path.dirname(path.dirname(__file__)),
+            "jobs", "load_dim_tbls.py"
+        ),
         name = "Load dimension data"
     )
 
