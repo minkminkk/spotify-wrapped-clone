@@ -102,7 +102,7 @@ def test_events_from_one_user(fake):
 @pytest.mark.parametrize(
     "start_dt,end_dt",
     [
-        ("2018-01-01", "2018-01-02 00:00:00"),  # Invalid dt string format
+        ("2018-01-32", "2018-01-40 00:00:00"),  # Invalid dt string format
         ("2018-13-01 00:00:00", "2018-13-02 00:00:00"), # invalid month field
         ("2018-01-31 00:00:00", "2018-01-32 00:00:00"), # invalid day field
         (datetime(2018, 1, 29), datetime(2018, 1, 28))  # start_dt > end_dt
@@ -110,7 +110,7 @@ def test_events_from_one_user(fake):
 )
 def test_events_from_one_user_invalid_dt(fake, start_dt, end_dt):
     with pytest.raises(ValueError):
-        for _ in fake.events_from_one_user(start_dt, end_dt, "_", 1):
+        for _ in fake.events_from_one_user(start_dt, end_dt, "_"):
             break
 
 
