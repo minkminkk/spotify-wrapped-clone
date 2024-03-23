@@ -100,7 +100,7 @@ class ClickstreamProvider(*providers):
             """Parse datetime string into datetime object if is string"""
             if isinstance(dt, str):
                 try:
-                    dt = datetime.strptime(dt, "%Y-%m-%d %H:%M:%S")
+                    dt = datetime.fromisoformat(dt)
                 except ValueError:
                     raise ValueError("Invalid datetime format.")
             return dt
