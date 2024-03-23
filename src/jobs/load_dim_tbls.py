@@ -15,7 +15,7 @@ def main():
 
     # Process into dimension tables
     df_tracks = get_df_tracks(df)
-    df_users = generate_df_users(no_users = 10000)
+    df_users = generate_df_users(no_users = 10000, df_tracks = df_tracks)
     df_dates = generate_df_dates("2018-01-01", "2028-01-01")
 
     # Write into Hive dimension tables
@@ -45,7 +45,7 @@ def get_df_tracks(df: DataFrame) -> DataFrame:
         .select(*cols)
 
 
-def generate_df_users(no_users: int) -> DataFrame:
+def generate_df_users(no_users: int, df_tracks: DataFrame) -> DataFrame:
     """Generate user DataFrame consisting profiles of no_users users"""
     spark = SparkSession.getActiveSession()
 
@@ -61,6 +61,16 @@ def generate_df_users(no_users: int) -> DataFrame:
             )
         ) \
         .withColumn("user_dim_id", F.row_number().over(w).cast(LongType())) \
+        .withColumn(
+            "track_ids", 
+            F.lit(
+                df_tracks \
+                    .sample(fraction = 0.0005) \
+                    .select("track_id") \
+                    .rdd.flatMap(lambda x: x) \
+                    .collect()
+            )
+        ) \
         .withColumnsRenamed(
             {
                 "mail": "email",
@@ -69,7 +79,7 @@ def generate_df_users(no_users: int) -> DataFrame:
         ) \
         .select(
             *("user_dim_id", "user_id", "username", "name"),
-            *("sex", "address", "email", "birth_date")
+            *("sex", "address", "email", "birth_date", "track_ids")
         )
         
     return df_users
