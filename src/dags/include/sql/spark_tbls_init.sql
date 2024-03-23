@@ -50,8 +50,8 @@ CREATE TABLE IF NOT EXISTS dwh.dim_dates (
 
 
 CREATE TABLE IF NOT EXISTS dwh.fct_trackplays (
-    start_date_dim_id   CHAR(64),
-    user_dim_id         BIGINT,
-    track_dim_id        BIGINT,
-    play_duration_ms    INTEGER
-) USING parquet PARTITIONED BY (start_date_dim_id);
+    play_start_date_dim_id  INTEGER,
+    user_dim_id             BIGINT,
+    track_dim_id            BIGINT,
+    play_duration_ms        INTEGER
+) USING parquet PARTITIONED BY (play_start_date_dim_id);

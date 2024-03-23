@@ -24,6 +24,14 @@ def main(start_dt: datetime | str, end_dt: datetime | str):
     # TODO: split data transform and loading into another task
     df = df.drop("event_year", "event_month", "event_day")
     df_agg = sum_playtime_from_clickstream(df)
+
+    # Map date_dim_id to play ts
+    df_agg = df_agg.withColumn(
+        "play_start_date_dim_id", 
+        F.date_format(df_agg["play_start_ts"], "yyyyMMdd")
+    ).drop("play_start_ts")
+
+    #TODO: Map dim_id to users, tracks
     
     df_agg.show()
 
