@@ -5,7 +5,7 @@ from os import path
 
 
 @dag(
-    dag_id = "daily_user_clickstream_etl",
+    dag_id = "daily_clickstream_etl",
     schedule = None,
     tags = ["etl", "daily", "clickstream"],
     default_args = {
@@ -16,7 +16,7 @@ from os import path
         "retries": 0,
     },
 )
-def daily_user_clickstream_etl():
+def daily_clickstream_etl():
     # Initial loading Spark job
     generate_clickstream = CustomSparkSubmitOperator(
         task_id = "generate_daily_clickstream", 
@@ -29,7 +29,7 @@ def daily_user_clickstream_etl():
     )
 
 
-run = daily_user_clickstream_etl()
+run = daily_clickstream_etl()
 
 
 if __name__ == "__main__":
