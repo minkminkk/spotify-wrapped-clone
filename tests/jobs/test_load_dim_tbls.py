@@ -18,11 +18,11 @@ def spark():
     yield spark
 
 
-def test_get_df_tracks(spark):
+def test_get_df_tracks():
     pass
 
 
-def test_generate_df_users(spark):
+def test_generate_df_users():
     df = generate_df_users(no_users = 10)
 
     # Test output DataFrame schema
@@ -40,7 +40,7 @@ def test_generate_df_users(spark):
         # are included as part of faker_custom_providers package
 
 
-def test_get_df_dates(spark):
+def test_get_df_dates():
     start_date = date.fromisoformat("2018-01-01")
     end_date = date.fromisoformat("2018-01-05")
     num_days = (end_date - start_date).days
