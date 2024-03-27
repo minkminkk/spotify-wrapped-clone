@@ -3,7 +3,7 @@ from pyspark.sql import SparkSession, Row
 from pyspark.testing import assertDataFrameEqual
 from faker import Faker
 from packages.faker_custom_providers import user_info
-from jobs.generate_daily_clickstream import generate_clickstream_to_df
+from jobs.daily_clickstream_generation import generate_clickstream_to_df
 
 
 @pytest.fixture(scope = "package")
