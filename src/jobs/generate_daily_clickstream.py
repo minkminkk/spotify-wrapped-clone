@@ -155,10 +155,15 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("start_dt", help = "Start date (YYYY-MM-DD)")
     parser.add_argument("end_dt", help = "End date (YYYY-MM-DD)")
+    parser.add_argument(
+        "-l", "--local",
+        action = "store_true",
+        help = "Run as local"
+    )
     args = parser.parse_args()
 
-    if isinstance(args.start_dt, str):
-        args.start_dt = datetime.fromisoformat(args.start_dt)
-        args.end_dt = datetime.fromisoformat(args.end_dt)
+    for dt in (args.start_dt, args.end_dt):
+        if isinstance(dt, str):
+            dt = datetime.fromisoformat(dt)
 
     main(args.start_dt, args.end_dt)
