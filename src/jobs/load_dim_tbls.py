@@ -5,12 +5,14 @@ from pyspark.sql import SparkSession, DataFrame, Window, functions as F
 from pyspark.sql.types import LongType
 
 
-def main():
+def main(local: bool):
     # Create SparkSession with Hive support
     spark = SparkSession.builder.enableHiveSupport().getOrCreate()
 
     # Read source data into DataFrame and rename columns
-    df = spark.read.parquet("./data/spotify-tracks.parquet")
+    data_path = "./data/spotify-tracks.parquet" if local \
+        else "hdfs://namenode:8020/data_lake/spotify-tracks.parquet"
+    df = spark.read.parquet(data_path)
     df = df.withColumnRenamed(df.columns[0], "id")
 
     # Process into dimension tables
@@ -19,9 +21,9 @@ def main():
     df_dates = generate_df_dates("2018-01-01", "2028-01-01")
 
     # Write into Hive dimension tables
-    df_tracks.write.insertInto("dwh.dim_tracks")
-    df_users.write.insertInto("dwh.dim_users")
-    df_dates.write.insertInto("dwh.dim_dates")
+    df_tracks.write.insertInto("dwh.dim_tracks", overwrite = True)
+    df_users.write.insertInto("dwh.dim_users", overwrite = True)
+    df_dates.write.insertInto("dwh.dim_dates", overwrite = True)
 
 
 def get_df_tracks(df: DataFrame) -> DataFrame:
@@ -121,4 +123,14 @@ def generate_df_dates(start_date: str, end_date: str) -> DataFrame:
 
 
 if __name__ == "__main__":
-    main()
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-l", "--local",
+        action = "store_true",
+        help = "Run as local" 
+    )
+    args = parser.parse_args()
+    
+    main(args.local)

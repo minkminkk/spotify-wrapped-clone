@@ -1,4 +1,5 @@
 from airflow.decorators import dag
+from airflow.models import Variable
 from airflow.providers.apache.spark.operators.spark_sql import SparkSqlOperator
 from include.custom_spark.spark_submit import CustomSparkSubmitOperator
 from os import path
@@ -24,7 +25,8 @@ def initial_loading():
     hive_tbls = SparkSqlOperator(
         task_id = "create_hive_tbls",
         conn_id = "spark_default",
-        # master = "spark://spark-master:7077",
+        # master = spark://spark-master:7077,
+            # conn master URL does not work properly so need explicitly stated
         name = "Create Hive tables",
         # conf = "spark.hive.metastore.uris=thrift://hive-metastore:9083",
         verbose = False,    # True by default
