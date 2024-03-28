@@ -1,4 +1,5 @@
-from pyspark.sql import SparkSession, DataFrame, functions as F
+from typing import List
+from pyspark.sql import SparkSession, DataFrame, Row, functions as F
 from pyspark.sql.types import *
 from packages.faker_custom_providers import user_clickstream
 from faker import Faker
@@ -10,7 +11,7 @@ def main(data_date: datetime, local: bool):
     spark = SparkSession.builder.enableHiveSupport().getOrCreate()
 
     # Get random 10% of all users as today's active users
-    df_user_track_ids = spark.table("dwh.dim_users") \
+    map_user_track_ids = spark.table("dwh.dim_users") \
         .select("user_id", "track_ids") \
         .sample(fraction = 0.1) \
         .collect()
@@ -19,7 +20,7 @@ def main(data_date: datetime, local: bool):
     df = generate_clickstream_to_df(
         start_dt = data_date, 
         end_dt = data_date + timedelta(days = 1), 
-        df_user_track_ids = df_user_track_ids, 
+        map_user_track_ids = map_user_track_ids, 
         max_events_per_user = 100
     )
     df = df.withColumn("event_year", F.year("event_ts")) \
@@ -41,7 +42,7 @@ def main(data_date: datetime, local: bool):
 def generate_clickstream_to_df(
     start_dt: datetime, 
     end_dt: datetime,
-    df_user_track_ids: dict,
+    map_user_track_ids: List[Row] | dict,
     max_events_per_user: int
 ) -> DataFrame:
     """Generate clickstream data within time period"""
@@ -53,7 +54,7 @@ def generate_clickstream_to_df(
 
     # Generate data
     rows = []
-    for user_track_id in df_user_track_ids:
+    for user_track_id in map_user_track_ids:
         rows.extend(
             [
                 event for event in fake.events_from_one_user(
